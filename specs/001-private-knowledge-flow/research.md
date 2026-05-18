@@ -9,14 +9,15 @@
 - Document-only repository: rejected because it cannot enforce permission filtering, workflow state, audit, or service calls.
 - Backend-only API: rejected because administrators and employees need first-phase workflows and validation screens.
 
-## Decision: FastAPI backend with Next.js frontend
+## Decision: FastAPI backend with existing TanStack Start frontend
 
-**Rationale**: The existing project profile already points to a Python/FastAPI and Next.js delivery style. FastAPI fits strong schema validation, OpenAPI contracts, async workers, and RAG orchestration. Next.js fits internal portal workflows and admin views.
+**Rationale**: The user provided an existing frontend repository, `HaoWinchester/puhua_KnowledgeUI`, with completed internal portal pages for dashboard, library, submission, review, access approval, audit, AI chat, operations, and integrations. FastAPI still fits strong schema validation, OpenAPI contracts, async workers, and RAG orchestration. The backend should integrate with the existing TanStack Start/Vite/React frontend by replacing mock data with API clients and field mappers.
 
 **Alternatives considered**:
 
 - Java Spring stack: strong enterprise fit, but not aligned with the existing local agent profile.
 - Low-code workflow platform first: useful later, but less flexible for permission-filtered RAG and custom audit requirements.
+- New frontend scaffold: rejected because the existing `puhua_KnowledgeUI` repository already contains the required first-phase workflows and validation screens.
 
 ## Decision: PostgreSQL as the operational source of truth
 

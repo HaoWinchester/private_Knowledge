@@ -24,6 +24,7 @@ export OPENSEARCH_URL="http://localhost:9200"
 export QDRANT_URL="http://localhost:6333"
 export IDENTITY_MODE="stub"
 export MODEL_GATEWAY_URL="http://localhost:8088"
+export CORS_ALLOWED_ORIGINS="http://localhost:3004"
 ```
 
 ## Planned Local Services
@@ -50,14 +51,14 @@ Health check:
 curl http://localhost:8001/health
 ```
 
-## Frontend
+## Existing Frontend
 
 ```bash
-cd frontend
+cd ../puhua_KnowledgeUI
 npm install
 npm run lint
-npm run test
-npm run dev -- --port 3004
+cp .env.example .env.local
+npm run dev -- --host 0.0.0.0 --port 3004
 ```
 
 Open:
@@ -65,6 +66,8 @@ Open:
 ```text
 http://localhost:3004
 ```
+
+The frontend repository is `https://github.com/HaoWinchester/puhua_KnowledgeUI.git`. It already contains the user and admin pages for the pilot. Backend implementation should replace its current `src/lib/mock-data.ts` usage through API clients and mappers rather than creating a new frontend.
 
 ## Contract Validation
 
