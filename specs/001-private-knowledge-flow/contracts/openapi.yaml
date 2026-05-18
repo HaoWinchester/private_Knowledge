@@ -1,0 +1,859 @@
+openapi: 3.1.0
+info:
+  title: Private Knowledge Flow API
+  version: 0.1.0
+  description: API contract for the first-phase enterprise knowledge base and governed knowledge service.
+servers:
+  - url: http://localhost:8001
+    description: Local development server
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+
+  /me:
+    get:
+      summary: Return current unified identity and local authorization context
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: Current user context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserContext"
+
+  /knowledge-items:
+    get:
+      summary: List knowledge items visible to the current user
+      operationId: listKnowledgeItems
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Confidentiality"
+        - $ref: "#/components/parameters/LifecycleStatus"
+        - $ref: "#/components/parameters/ProjectStage"
+        - $ref: "#/components/parameters/BusinessTheme"
+      responses:
+        "200":
+          description: Permission-filtered list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/KnowledgeCard"
+    post:
+      summary: Submit a new knowledge item for review
+      operationId: createKnowledgeSubmission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeSubmissionCreate"
+      responses:
+        "202":
+          description: Intake request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntakeRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /knowledge-items/{knowledgeItemId}:
+    get:
+      summary: Get a knowledge item if authorized
+      operationId: getKnowledgeItem
+      parameters:
+        - $ref: "#/components/parameters/KnowledgeItemId"
+      responses:
+        "200":
+          description: Knowledge item detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItemDetail"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Submit metadata or lifecycle updates for review
+      operationId: updateKnowledgeItem
+      parameters:
+        - $ref: "#/components/parameters/KnowledgeItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeItemUpdate"
+      responses:
+        "202":
+          description: Update request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntakeRequest"
+
+  /knowledge-items/{knowledgeItemId}/versions:
+    get:
+      summary: List historical versions if authorized
+      operationId: listKnowledgeVersions
+      parameters:
+        - $ref: "#/components/parameters/KnowledgeItemId"
+      responses:
+        "200":
+          description: Version history
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [versions]
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/KnowledgeVersion"
+    post:
+      summary: Submit a new version for review
+      operationId: createKnowledgeVersion
+      parameters:
+        - $ref: "#/components/parameters/KnowledgeItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeVersionCreate"
+      responses:
+        "202":
+          description: Version review request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntakeRequest"
+
+  /intake-requests:
+    get:
+      summary: List intake requests for current reviewer or submitter
+      operationId: listIntakeRequests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/IntakeStatus"
+      responses:
+        "200":
+          description: Intake requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/IntakeRequest"
+
+  /intake-requests/{intakeRequestId}/review:
+    post:
+      summary: Review an intake request
+      operationId: reviewIntakeRequest
+      parameters:
+        - name: intakeRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewDecisionCreate"
+      responses:
+        "200":
+          description: Review decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewDecision"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /search:
+    post:
+      summary: Permission-filtered search across metadata, full text, and semantic retrieval
+      operationId: searchKnowledge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+
+  /qa:
+    post:
+      summary: Answer a question using authorized knowledge with citations
+      operationId: answerQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QARequest"
+      responses:
+        "200":
+          description: Permission-filtered answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QAResponse"
+
+  /authorization-requests:
+    post:
+      summary: Request explicit access to restricted knowledge
+      operationId: createAuthorizationRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorizationRequestCreate"
+      responses:
+        "202":
+          description: Authorization request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizationRequest"
+    get:
+      summary: List authorization requests
+      operationId: listAuthorizationRequests
+      responses:
+        "200":
+          description: Authorization requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuthorizationRequest"
+
+  /authorization-requests/{authorizationRequestId}/review:
+    post:
+      summary: Approve or reject a restricted access request
+      operationId: reviewAuthorizationRequest
+      parameters:
+        - name: authorizationRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorizationReview"
+      responses:
+        "200":
+          description: Authorization decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizationRequest"
+
+  /quality-signals:
+    post:
+      summary: Record a usage or quality signal
+      operationId: createQualitySignal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QualitySignalCreate"
+      responses:
+        "201":
+          description: Quality signal recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualitySignal"
+
+  /audit-events:
+    get:
+      summary: Query audit events
+      operationId: queryAuditEvents
+      parameters:
+        - name: actorUserId
+          in: query
+          schema:
+            type: string
+        - name: knowledgeItemId
+          in: query
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          schema:
+            $ref: "#/components/schemas/AuditEventType"
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditEvent"
+
+  /knowledge-service/query:
+    post:
+      summary: Governed knowledge service endpoint for one pilot upper-level AI application
+      operationId: queryKnowledgeService
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeServiceRequest"
+      responses:
+        "200":
+          description: Governed response with citations and audit metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeServiceResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    KnowledgeItemId:
+      name: knowledgeItemId
+      in: path
+      required: true
+      schema:
+        type: string
+    Query:
+      name: q
+      in: query
+      schema:
+        type: string
+    Confidentiality:
+      name: confidentiality
+      in: query
+      schema:
+        $ref: "#/components/schemas/ConfidentialityLevel"
+    LifecycleStatus:
+      name: lifecycleStatus
+      in: query
+      schema:
+        $ref: "#/components/schemas/KnowledgeStatus"
+    ProjectStage:
+      name: projectStage
+      in: query
+      schema:
+        type: string
+    BusinessTheme:
+      name: businessTheme
+      in: query
+      schema:
+        type: string
+
+  responses:
+    Forbidden:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    UserContext:
+      type: object
+      required: [userId, displayName, departmentId, roles]
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        departmentId:
+          type: string
+        departmentName:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+
+    ConfidentialityLevel:
+      type: string
+      enum: [internal_public, department_visible, project_visible, sensitive, strictly_controlled]
+
+    KnowledgeStatus:
+      type: string
+      enum: [draft, pending_review, published, rejected, rectification_required, archived, removed, restored]
+
+    IntakeStatus:
+      type: string
+      enum: [submitted, precheck_flagged, in_review, approved, rejected, rectification_required, cancelled]
+
+    KnowledgeCard:
+      type: object
+      required: [id, title, summary, status, confidentialityLevel, currentVersionId]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        status:
+          $ref: "#/components/schemas/KnowledgeStatus"
+        confidentialityLevel:
+          $ref: "#/components/schemas/ConfidentialityLevel"
+        currentVersionId:
+          type: string
+        sourceDisplayName:
+          type: string
+        applicableScope:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadataOnly:
+          type: boolean
+          description: True when strictly controlled content cannot be exposed yet.
+        authorizationRequestAvailable:
+          type: boolean
+
+    KnowledgeItemDetail:
+      allOf:
+        - $ref: "#/components/schemas/KnowledgeCard"
+        - type: object
+          properties:
+            contentPreview:
+              type: string
+            versions:
+              type: array
+              items:
+                $ref: "#/components/schemas/KnowledgeVersion"
+            permissions:
+              type: array
+              items:
+                type: string
+
+    KnowledgeSubmissionCreate:
+      type: object
+      required: [title, source, responsibleUserId, roleDirection, businessTheme, confidentialityLevel, summary, applicableScope, validUntil]
+      properties:
+        title:
+          type: string
+        source:
+          $ref: "#/components/schemas/KnowledgeSourceInput"
+        responsibleUserId:
+          type: string
+        roleDirection:
+          type: string
+        businessTheme:
+          type: string
+        customerOrProject:
+          type: string
+        confidentialityLevel:
+          $ref: "#/components/schemas/ConfidentialityLevel"
+        summary:
+          type: string
+        suggestedTags:
+          type: array
+          items:
+            type: string
+        applicableScope:
+          type: string
+        validUntil:
+          type: string
+          format: date
+
+    KnowledgeSourceInput:
+      type: object
+      required: [sourceType, displayName]
+      properties:
+        sourceType:
+          type: string
+          enum: [manual_upload, link_reference, shared_directory_readonly, project_sample_readonly, form]
+        uri:
+          type: string
+        displayName:
+          type: string
+        checksum:
+          type: string
+
+    KnowledgeItemUpdate:
+      type: object
+      properties:
+        summary:
+          type: string
+        applicableScope:
+          type: string
+        confidentialityLevel:
+          $ref: "#/components/schemas/ConfidentialityLevel"
+        validUntil:
+          type: string
+          format: date
+        reason:
+          type: string
+
+    KnowledgeVersion:
+      type: object
+      required: [id, versionNumber, effectiveStatus, createdAt]
+      properties:
+        id:
+          type: string
+        versionNumber:
+          type: integer
+        changeSummary:
+          type: string
+        effectiveStatus:
+          type: string
+          enum: [draft, effective, superseded, archived, removed]
+        createdAt:
+          type: string
+          format: date-time
+        retentionUntil:
+          type: string
+          format: date
+
+    KnowledgeVersionCreate:
+      type: object
+      required: [changeSummary, source]
+      properties:
+        changeSummary:
+          type: string
+        source:
+          $ref: "#/components/schemas/KnowledgeSourceInput"
+
+    IntakeRequest:
+      type: object
+      required: [id, knowledgeItemId, requestType, status, createdAt]
+      properties:
+        id:
+          type: string
+        knowledgeItemId:
+          type: string
+        requestType:
+          type: string
+          enum: [create, update, rectify, remove, restore]
+        status:
+          $ref: "#/components/schemas/IntakeStatus"
+        reviewGroup:
+          type: string
+          enum: [knowledge_admin, domain_expert, security_admin]
+        createdAt:
+          type: string
+          format: date-time
+
+    ReviewDecisionCreate:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject, request_rectification, escalate]
+        comments:
+          type: string
+        reasonCode:
+          type: string
+
+    ReviewDecision:
+      allOf:
+        - $ref: "#/components/schemas/ReviewDecisionCreate"
+        - type: object
+          required: [id, reviewerUserId, createdAt]
+          properties:
+            id:
+              type: string
+            reviewerUserId:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    SearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+        filters:
+          type: object
+          additionalProperties:
+            type: string
+        includeSemantic:
+          type: boolean
+          default: true
+
+    SearchResponse:
+      type: object
+      required: [items, auditEventId]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeCard"
+        auditEventId:
+          type: string
+
+    QARequest:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+        businessContext:
+          type: string
+        filters:
+          type: object
+          additionalProperties:
+            type: string
+
+    QAResponse:
+      type: object
+      required: [answer, citations, auditEventId]
+      properties:
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        reviewCue:
+          type: string
+        auditEventId:
+          type: string
+
+    AuthorizationRequestCreate:
+      type: object
+      required: [knowledgeItemId, requestedPermission, businessContext]
+      properties:
+        knowledgeItemId:
+          type: string
+        requestedPermission:
+          type: string
+          enum: [view_content, cite, export, download, use_in_qa, use_in_ai_service]
+        businessContext:
+          type: string
+
+    AuthorizationReview:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject]
+        reviewComment:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    AuthorizationRequest:
+      type: object
+      required: [id, knowledgeItemId, requestedPermission, status]
+      properties:
+        id:
+          type: string
+        knowledgeItemId:
+          type: string
+        requestedPermission:
+          type: string
+        status:
+          type: string
+          enum: [submitted, approved, rejected, expired]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    QualitySignalCreate:
+      type: object
+      required: [knowledgeItemId, signalType]
+      properties:
+        knowledgeItemId:
+          type: string
+        signalType:
+          type: string
+          enum: [view, favorite, cite, qa_hit, reuse, rating, feedback, expiration_due, rectification]
+        value:
+          type: string
+        comment:
+          type: string
+
+    QualitySignal:
+      allOf:
+        - $ref: "#/components/schemas/QualitySignalCreate"
+        - type: object
+          required: [id, createdAt]
+          properties:
+            id:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    AuditEventType:
+      type: string
+      enum: [submit, review, publish, version_change, search, browse, cite, export, download, qa_call, service_call, access_denied, lifecycle_change]
+
+    AuditEvent:
+      type: object
+      required: [id, eventType, result, createdAt, retentionUntil]
+      properties:
+        id:
+          type: string
+        actorUserId:
+          type: string
+        applicationId:
+          type: string
+        knowledgeItemId:
+          type: string
+        eventType:
+          $ref: "#/components/schemas/AuditEventType"
+        operationContext:
+          type: string
+        result:
+          type: string
+          enum: [success, denied, failed]
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        retentionUntil:
+          type: string
+          format: date
+
+    KnowledgeServiceRequest:
+      type: object
+      required: [applicationId, requestType, input]
+      properties:
+        applicationId:
+          type: string
+        requestType:
+          type: string
+          enum: [retrieve, qa, recommend]
+        businessContext:
+          type: string
+        input:
+          type: string
+
+    KnowledgeServiceResponse:
+      type: object
+      required: [status, citations, auditEventId]
+      properties:
+        status:
+          type: string
+          enum: [success, denied, failed]
+        output:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        deniedReason:
+          type: string
+        auditEventId:
+          type: string
+
+    Citation:
+      type: object
+      required: [knowledgeItemId, knowledgeVersionId, citationType]
+      properties:
+        knowledgeItemId:
+          type: string
+        knowledgeVersionId:
+          type: string
+        fragmentRef:
+          type: string
+        citationType:
+          type: string
+          enum: [search_result, qa_source, recommendation_source, generated_output_source]
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
