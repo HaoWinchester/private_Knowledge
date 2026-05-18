@@ -155,6 +155,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/IntakeRequest"
 
+  /business-action-bindings:
+    post:
+      summary: Bind a business action scenario to a governed knowledge intake trigger
+      operationId: createBusinessActionBinding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessActionBindingCreate"
+      responses:
+        "201":
+          description: Business action binding created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessActionBinding"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   /intake-requests:
     get:
       summary: List intake requests for current reviewer or submitter
@@ -357,6 +377,84 @@ paths:
                     items:
                       $ref: "#/components/schemas/AuditEvent"
 
+  /operations/summary:
+    get:
+      summary: Return quality and lifecycle operations dashboard summary
+      operationId: getOperationsSummary
+      responses:
+        "200":
+          description: Operations dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationsSummary"
+
+  /applications:
+    get:
+      summary: List pilot upper-level AI applications connected to the knowledge service
+      operationId: listApplications
+      responses:
+        "200":
+          description: Pilot applications
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ApplicationSummary"
+
+  /applications/{applicationId}/keys/rotate:
+    post:
+      summary: Rotate the service key for one pilot application
+      operationId: rotateApplicationKey
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rotated key metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationKeyRotationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /application-policies:
+    get:
+      summary: Return global governed-service policy switches for pilot applications
+      operationId: getApplicationPolicies
+      responses:
+        "200":
+          description: Current policy switch state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationPolicyState"
+    patch:
+      summary: Update global governed-service policy switches
+      operationId: updateApplicationPolicies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationPolicyUpdate"
+      responses:
+        "200":
+          description: Updated policy switch state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationPolicyState"
+
   /knowledge-service/query:
     post:
       summary: Governed knowledge service endpoint for one pilot upper-level AI application
@@ -535,10 +633,12 @@ components:
 
     KnowledgeSubmissionCreate:
       type: object
-      required: [title, source, responsibleUserId, roleDirection, businessTheme, confidentialityLevel, summary, applicableScope, validUntil]
+      required: [title, knowledgeType, source, responsibleUserId, roleDirection, businessTheme, confidentialityLevel, summary, applicableScope, validUntil]
       properties:
         title:
           type: string
+        knowledgeType:
+          $ref: "#/components/schemas/KnowledgeType"
         source:
           $ref: "#/components/schemas/KnowledgeSourceInput"
         responsibleUserId:
@@ -576,6 +676,48 @@ components:
           type: string
         checksum:
           type: string
+
+    KnowledgeType:
+      type: string
+      enum: [document, note, meeting_output, project_material, code_practice, review, link, form]
+
+    BusinessActionType:
+      type: string
+      enum: [project_review, presales_archive, delivery_review, recruitment_evaluation]
+
+    BusinessActionBindingCreate:
+      type: object
+      required: [actionType, source, responsibleUserId, businessContext, confidentialityLevel, summary, applicableScope, validUntil]
+      properties:
+        actionType:
+          $ref: "#/components/schemas/BusinessActionType"
+        source:
+          $ref: "#/components/schemas/KnowledgeSourceInput"
+        responsibleUserId:
+          type: string
+        businessContext:
+          type: string
+        confidentialityLevel:
+          $ref: "#/components/schemas/ConfidentialityLevel"
+        summary:
+          type: string
+        applicableScope:
+          type: string
+        validUntil:
+          type: string
+          format: date
+
+    BusinessActionBinding:
+      allOf:
+        - $ref: "#/components/schemas/BusinessActionBindingCreate"
+        - type: object
+          required: [id, createdAt]
+          properties:
+            id:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
 
     KnowledgeItemUpdate:
       type: object
@@ -823,16 +965,142 @@ components:
           type: string
           format: date
 
-    KnowledgeServiceRequest:
+    OperationsSummary:
       type: object
-      required: [applicationId, requestType, input]
+      required: [newKnowledgeCount, reuseCount, expiringCount, activeExpertCount, qualityDistribution, weakAreas, expiringItems]
+      properties:
+        newKnowledgeCount:
+          type: integer
+          minimum: 0
+        reuseCount:
+          type: integer
+          minimum: 0
+        expiringCount:
+          type: integer
+          minimum: 0
+        activeExpertCount:
+          type: integer
+          minimum: 0
+        qualityDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityDistributionBucket"
+        weakAreas:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeakArea"
+        expiringItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpiringKnowledgeItem"
+
+    QualityDistributionBucket:
+      type: object
+      required: [label, count]
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+          minimum: 0
+
+    WeakArea:
+      type: object
+      required: [businessTheme, issueCount]
+      properties:
+        businessTheme:
+          type: string
+        issueCount:
+          type: integer
+          minimum: 0
+        suggestedAction:
+          type: string
+
+    ExpiringKnowledgeItem:
+      type: object
+      required: [knowledgeItemId, title, validUntil]
+      properties:
+        knowledgeItemId:
+          type: string
+        title:
+          type: string
+        validUntil:
+          type: string
+          format: date
+        responsibleUserId:
+          type: string
+
+    ApplicationSummary:
+      type: object
+      required: [applicationId, name, status, monthlyCalls, deniedCalls, pilot]
       properties:
         applicationId:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [connected, pending, disabled]
+        monthlyCalls:
+          type: integer
+          minimum: 0
+        deniedCalls:
+          type: integer
+          minimum: 0
+        pilot:
+          type: boolean
+
+    ApplicationKeyRotationResponse:
+      type: object
+      required: [applicationId, maskedKey, rotatedAt]
+      properties:
+        applicationId:
+          type: string
+        maskedKey:
+          type: string
+        rotatedAt:
+          type: string
+          format: date-time
+
+    ApplicationPolicyState:
+      type: object
+      required: [prohibitTraining, sensitiveOnlyDesensitized, strictRequiresApproval, forceAudit]
+      properties:
+        prohibitTraining:
+          type: boolean
+        sensitiveOnlyDesensitized:
+          type: boolean
+        strictRequiresApproval:
+          type: boolean
+        forceAudit:
+          type: boolean
+
+    ApplicationPolicyUpdate:
+      type: object
+      properties:
+        prohibitTraining:
+          type: boolean
+        sensitiveOnlyDesensitized:
+          type: boolean
+        strictRequiresApproval:
+          type: boolean
+        forceAudit:
+          type: boolean
+
+    KnowledgeServiceRequest:
+      type: object
+      required: [applicationId, requesterUserId, requestType, businessContext, input]
+      properties:
+        applicationId:
+          type: string
+        requesterUserId:
           type: string
         requestType:
           type: string
           enum: [retrieve, qa, recommend]
         businessContext:
+          type: string
+        projectContext:
           type: string
         input:
           type: string

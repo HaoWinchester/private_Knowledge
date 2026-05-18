@@ -85,6 +85,34 @@ Original source or reference for a knowledge item.
 - Read-only sources must never be modified by the knowledge system.
 - Link and directory sources must store enough display metadata to support review if the target becomes unavailable.
 
+### BusinessActionBinding
+
+Configured trigger that binds a business action scenario to a governed knowledge intake path.
+
+**Fields**:
+
+- `id`
+- `action_type`: project_review, presales_archive, delivery_review, recruitment_evaluation
+- `source_id`
+- `responsible_user_id`
+- `business_context`
+- `confidentiality_level`
+- `summary`
+- `applicable_scope`
+- `valid_until`
+- `status`: active, disabled
+- `created_at`
+
+**Relationships**:
+
+- References one `KnowledgeSource`.
+- Can create or prefill one or more `IntakeRequest` records.
+
+**Validation Rules**:
+
+- Business action bindings must provide enough metadata to pass the same intake validation as manual submissions.
+- Disabled bindings cannot create new intake requests.
+
 ### KnowledgeVersion
 
 Historical version of a knowledge item.
@@ -263,6 +291,7 @@ Upper-level AI application request for governed retrieval or QA.
 - `application_id`
 - `requester_user_id`
 - `business_context`
+- `project_context`
 - `request_type`: retrieve, qa, recommend
 - `input_summary`
 - `result_summary`

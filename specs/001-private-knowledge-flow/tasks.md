@@ -119,27 +119,27 @@
 - [ ] T073 [P] [US1] Add contract test for `POST /knowledge-items` in `backend/tests/contract/test_knowledge_submission_contract.py`
 - [ ] T074 [P] [US1] Add contract test for `GET /intake-requests` in `backend/tests/contract/test_intake_requests_contract.py`
 - [ ] T075 [P] [US1] Add contract test for `POST /intake-requests/{id}/review` in `backend/tests/contract/test_intake_review_contract.py`
-- [ ] T076 [P] [US1] Add contract test for `POST /knowledge-items/{id}/versions` in `backend/tests/contract/test_knowledge_versions_contract.py`
+- [ ] T076 [P] [US1] Add contract tests for `POST /knowledge-items/{id}/versions` in `backend/tests/contract/test_knowledge_versions_contract.py` and `POST /business-action-bindings` in `backend/tests/contract/test_business_action_bindings_contract.py`
 - [ ] T077 [P] [US1] Add integration test for submit-review-publish flow in `backend/tests/integration/test_submit_review_publish_flow.py`
 - [ ] T078 [P] [US1] Add integration test for required metadata validation in `backend/tests/integration/test_submission_metadata_validation.py`
-- [ ] T079 [P] [US1] Add integration test for sensitive precheck routing in `backend/tests/integration/test_sensitive_submission_precheck.py`
+- [ ] T079 [P] [US1] Add integration test for business-action binding intake and sensitive precheck routing in `backend/tests/integration/test_sensitive_submission_precheck.py`
 - [ ] T080 [P] [US1] Add frontend submission journey test in `../puhua_KnowledgeUI/tests/e2e/submit-review-publish.spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T081 [P] [US1] Define KnowledgeSource model in `backend/src/models/knowledge_source.py`
+- [ ] T081 [P] [US1] Define KnowledgeSource and BusinessActionBinding models in `backend/src/models/knowledge_source.py` and `backend/src/models/business_action_binding.py`
 - [ ] T082 [P] [US1] Define KnowledgeItem model in `backend/src/models/knowledge_item.py`
 - [ ] T083 [P] [US1] Define KnowledgeVersion model in `backend/src/models/knowledge_version.py`
 - [ ] T084 [P] [US1] Define IntakeRequest model in `backend/src/models/intake_request.py`
 - [ ] T085 [P] [US1] Define ReviewDecision model in `backend/src/models/review_decision.py`
 - [ ] T086 [P] [US1] Define ClassificationAssignment model in `backend/src/models/classification_assignment.py`
-- [ ] T087 [US1] Add knowledge intake tables to migration in `infra/migrations/versions/0001_initial.py`
-- [ ] T088 [P] [US1] Define knowledge source schemas in `backend/src/schemas/knowledge_source.py`
+- [ ] T087 [US1] Add knowledge intake and business-action binding tables to migration in `infra/migrations/versions/0001_initial.py`
+- [ ] T088 [P] [US1] Define knowledge source and business-action binding schemas in `backend/src/schemas/knowledge_source.py` and `backend/src/schemas/business_action_binding.py`
 - [ ] T089 [P] [US1] Define knowledge item schemas in `backend/src/schemas/knowledge_item.py`
 - [ ] T090 [P] [US1] Define knowledge version schemas in `backend/src/schemas/knowledge_version.py`
 - [ ] T091 [P] [US1] Define intake request schemas in `backend/src/schemas/intake_request.py`
 - [ ] T092 [P] [US1] Define review decision schemas in `backend/src/schemas/review_decision.py`
-- [ ] T093 [US1] Implement source registration service in `backend/src/services/source_service.py`
+- [ ] T093 [US1] Implement source registration and business-action binding service in `backend/src/services/source_service.py`
 - [ ] T094 [US1] Implement submission metadata validator in `backend/src/services/submission_validation_service.py`
 - [ ] T095 [US1] Implement duplicate precheck service in `backend/src/services/duplicate_precheck_service.py`
 - [ ] T096 [US1] Implement confidentiality precheck service in `backend/src/services/confidentiality_precheck_service.py`
@@ -150,7 +150,7 @@
 - [ ] T101 [US1] Implement classification assignment service in `backend/src/services/classification_service.py`
 - [ ] T102 [US1] Implement document extraction worker stub in `backend/src/workers/document_extraction.py`
 - [ ] T103 [US1] Implement source checksum worker stub in `backend/src/workers/source_integrity.py`
-- [ ] T104 [US1] Implement `POST /knowledge-items` route in `backend/src/api/routes/knowledge_items.py`
+- [ ] T104 [US1] Implement `POST /knowledge-items` in `backend/src/api/routes/knowledge_items.py` and `POST /business-action-bindings` in `backend/src/api/routes/business_action_bindings.py`
 - [ ] T105 [US1] Implement `PATCH /knowledge-items/{knowledgeItemId}` route in `backend/src/api/routes/knowledge_items.py`
 - [ ] T106 [US1] Implement `GET /knowledge-items/{knowledgeItemId}/versions` route in `backend/src/api/routes/knowledge_versions.py`
 - [ ] T107 [US1] Implement `POST /knowledge-items/{knowledgeItemId}/versions` route in `backend/src/api/routes/knowledge_versions.py`
@@ -161,8 +161,8 @@
 - [ ] T112 [US1] Emit version_change audit events in `backend/src/services/version_service.py`
 - [ ] T113 [US1] Add knowledge API methods for submit and versioning in `../puhua_KnowledgeUI/src/lib/knowledge-api.ts`
 - [ ] T114 [US1] Add intake API methods for queue and decisions in `../puhua_KnowledgeUI/src/lib/review-api.ts`
-- [ ] T115 [US1] Map submit form values to `KnowledgeSubmissionCreate` in `../puhua_KnowledgeUI/src/lib/api-mappers.ts`
-- [ ] T116 [US1] Replace mock submit handler with mutation in `../puhua_KnowledgeUI/src/routes/submit.tsx`
+- [ ] T115 [US1] Map submit form values to `KnowledgeSubmissionCreate`, including separate `knowledgeType` and `source.sourceType`, in `../puhua_KnowledgeUI/src/lib/api-mappers.ts`
+- [ ] T116 [US1] Replace mock submit handler and business-action binding tab actions with mutations in `../puhua_KnowledgeUI/src/routes/submit.tsx`
 - [ ] T117 [US1] Load intake queue from backend in `../puhua_KnowledgeUI/src/routes/review.tsx`
 - [ ] T118 [US1] Replace review decision toast-only action with API mutation in `../puhua_KnowledgeUI/src/routes/review.tsx`
 - [ ] T119 [US1] Refresh dashboard pending-review list from backend in `../puhua_KnowledgeUI/src/routes/index.tsx`
@@ -333,7 +333,7 @@
 - [ ] T230 [US4] Implement quality aggregation worker in `backend/src/workers/quality_aggregation.py`
 - [ ] T231 [US4] Implement `POST /quality-signals` route in `backend/src/api/routes/quality_signals.py`
 - [ ] T232 [US4] Implement lifecycle action handlers in `backend/src/api/routes/knowledge_items.py`
-- [ ] T233 [US4] Implement operations summary route in `backend/src/api/routes/operations.py`
+- [ ] T233 [US4] Implement `GET /operations/summary` route in `backend/src/api/routes/operations.py`
 - [ ] T234 [US4] Emit lifecycle_change audit events in `backend/src/services/lifecycle_action_service.py`
 - [ ] T235 [US4] Add quality signal API methods in `../puhua_KnowledgeUI/src/lib/quality-api.ts`
 - [ ] T236 [US4] Add operations dashboard API methods in `../puhua_KnowledgeUI/src/lib/operations-api.ts`
@@ -360,7 +360,7 @@
 
 > Write these tests first and confirm they fail before implementation.
 
-- [ ] T245 [P] [US5] Add contract test for `POST /knowledge-service/query` and `POST /api/v1/knowledge/query` in `backend/tests/contract/test_knowledge_service_contract.py`
+- [ ] T245 [P] [US5] Add contract tests for `POST /knowledge-service/query`, `POST /api/v1/knowledge/query`, `GET /applications`, `POST /applications/{id}/keys/rotate`, and application policy routes in `backend/tests/contract/test_knowledge_service_contract.py`
 - [ ] T246 [P] [US5] Add integration test for governed retrieve request in `backend/tests/integration/test_knowledge_service_retrieve.py`
 - [ ] T247 [P] [US5] Add integration test for governed QA request in `backend/tests/integration/test_knowledge_service_qa.py`
 - [ ] T248 [P] [US5] Add integration test for AI-service denial audit in `backend/tests/integration/test_knowledge_service_denial_audit.py`
@@ -381,13 +381,13 @@
 - [ ] T260 [US5] Enforce application permission rules in `backend/src/services/authorization_service.py`
 - [ ] T261 [US5] Emit service_call audit events in `backend/src/services/knowledge_service_log_service.py`
 - [ ] T262 [US5] Implement `POST /knowledge-service/query` route and `/api/v1/knowledge/query` compatibility alias in `backend/src/api/routes/knowledge_service.py`
-- [ ] T263 [US5] Implement pilot application listing route in `backend/src/api/routes/applications.py`
-- [ ] T264 [US5] Implement application key rotation route in `backend/src/api/routes/applications.py`
+- [ ] T263 [US5] Implement `GET /applications` pilot application listing route in `backend/src/api/routes/applications.py`
+- [ ] T264 [US5] Implement `POST /applications/{applicationId}/keys/rotate` route in `backend/src/api/routes/applications.py`
 - [ ] T265 [US5] Add governed service API methods in `../puhua_KnowledgeUI/src/lib/integrations-api.ts`
 - [ ] T266 [US5] Replace integrations endpoint card with backend config in `../puhua_KnowledgeUI/src/routes/integrations.tsx`
 - [ ] T267 [US5] Replace integrations app table with backend app list in `../puhua_KnowledgeUI/src/routes/integrations.tsx`
 - [ ] T268 [US5] Wire API key reveal and rotation actions to backend in `../puhua_KnowledgeUI/src/routes/integrations.tsx`
-- [ ] T269 [US5] Wire global strategy switches to backend policy state in `../puhua_KnowledgeUI/src/routes/integrations.tsx`
+- [ ] T269 [US5] Wire global strategy switches to `GET /application-policies` and `PATCH /application-policies` in `../puhua_KnowledgeUI/src/routes/integrations.tsx`
 - [ ] T270 [US5] Ensure AI chat can call governed service mode when configured in `../puhua_KnowledgeUI/src/routes/ai-chat.tsx`
 - [ ] T271 [US5] Add pilot application seed data in `infra/seed/pilot_applications.json`
 - [ ] T272 [US5] Document governed service request examples in `specs/001-private-knowledge-flow/quickstart.md`

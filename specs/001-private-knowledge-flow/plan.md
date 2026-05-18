@@ -74,16 +74,6 @@ backend/
     ├── integration/
     └── unit/
 
-frontend/
-├── src/
-│   ├── app/
-│   ├── components/
-│   ├── features/
-│   ├── services/
-│   └── state/
-└── tests/
-    └── e2e/
-
 infra/
 ├── docker/
 ├── migrations/

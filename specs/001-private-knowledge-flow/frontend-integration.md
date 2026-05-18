@@ -49,18 +49,32 @@ The backend must integrate with this existing UI instead of creating a new front
 | `已下架` | `removed` |
 | `已过期` | `archived` or derived from `validUntil` |
 
-### Source Type
+### Knowledge Type
+
+Submit payloads MUST send this as `knowledgeType`.
 
 | UI label | API enum |
 | --- | --- |
-| `文档` | `manual_upload` |
-| `笔记` | `form` |
-| `会议纪要` | `form` |
-| `项目资料` | `project_sample_readonly` |
-| `代码实践` | `project_sample_readonly` |
-| `复盘` | `project_sample_readonly` |
-| `链接` | `link_reference` |
+| `文档` | `document` |
+| `笔记` | `note` |
+| `会议纪要` | `meeting_output` |
+| `项目资料` | `project_material` |
+| `代码实践` | `code_practice` |
+| `复盘` | `review` |
+| `链接` | `link` |
 | `表单` | `form` |
+
+### Source Channel
+
+Submit payloads MUST send this as `source.sourceType`.
+
+| UI label | API enum |
+| --- | --- |
+| `人工上传` | `manual_upload` |
+| `链接引用` | `link_reference` |
+| `共享目录` | `shared_directory_readonly` |
+| `项目样例` | `project_sample_readonly` |
+| `结构化表单` | `form` |
 
 ### Review Type
 
@@ -105,8 +119,10 @@ The backend must integrate with this existing UI instead of creating a new front
 ## Backend Alignment Notes
 
 - Keep `contracts/openapi.yaml` as the backend contract, but add adapter-friendly fields where useful instead of changing UI labels into backend storage values.
+- Knowledge submission adapters must map the UI category to `knowledgeType` and the intake source/channel selector to `source.sourceType`; these two values are intentionally separate.
 - Enable CORS for the Vite dev origin used by the frontend.
-- Support both `POST /knowledge-service/query` and the existing UI-facing alias `POST /api/v1/knowledge/query`.
+- Support both `POST /knowledge-service/query` and the existing UI-facing alias `POST /api/v1/knowledge/query`; every service request must include `applicationId`, `requesterUserId`, `businessContext`, and `input`, with `projectContext` included when the business action is project-scoped.
 - Return `metadataOnly` and `authorizationRequestAvailable` for strictly controlled knowledge so `/library/$id` and `/ai-chat` can render the existing restricted banners.
 - Always include citation IDs, version numbers, scope, and audit event IDs in QA/service responses because the UI already displays these concepts.
-- Provide dashboard and operations summary endpoints or a thin BFF-style aggregation route if route-level composition becomes too chatty.
+- Provide `GET /operations/summary` for the operations page, and `GET /applications`, `POST /applications/{applicationId}/keys/rotate`, `GET /application-policies`, and `PATCH /application-policies` for the integrations page.
+- Provide `POST /business-action-bindings` so project review, presales archive, delivery review, and recruitment evaluation scenarios can be wired as knowledge intake triggers instead of being treated as ordinary manual submissions.
