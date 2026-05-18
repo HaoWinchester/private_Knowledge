@@ -45,6 +45,8 @@ pytest
 uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
+During local foundation testing, the backend defaults to `sqlite+aiosqlite:///./knowledge_dev.db` if `DATABASE_URL` is not set. Use the PostgreSQL URL above when validating migrations against the full local service stack.
+
 Health check:
 
 ```bash

@@ -20,32 +20,32 @@
 
 **Purpose**: Create backend, infrastructure, and external frontend integration skeletons required by the implementation plan.
 
-- [ ] T001 Create backend package entrypoint in `backend/src/__init__.py`
-- [ ] T002 Create FastAPI application shell in `backend/src/main.py`
-- [ ] T003 [P] Create backend API package marker in `backend/src/api/__init__.py`
-- [ ] T004 [P] Create backend route package marker in `backend/src/api/routes/__init__.py`
-- [ ] T005 [P] Create backend dependency package marker in `backend/src/api/dependencies/__init__.py`
-- [ ] T006 [P] Create backend core package marker in `backend/src/core/__init__.py`
-- [ ] T007 [P] Create backend model package marker in `backend/src/models/__init__.py`
-- [ ] T008 [P] Create backend schema package marker in `backend/src/schemas/__init__.py`
-- [ ] T009 [P] Create backend service package marker in `backend/src/services/__init__.py`
-- [ ] T010 [P] Create backend integration package marker in `backend/src/integrations/__init__.py`
-- [ ] T011 [P] Create backend worker package marker in `backend/src/workers/__init__.py`
-- [ ] T012 Define backend runtime dependencies in `backend/requirements.txt`
-- [ ] T013 Define backend development dependencies in `backend/requirements-dev.txt`
-- [ ] T014 Configure pytest defaults in `backend/pytest.ini`
-- [ ] T015 Configure Alembic entrypoint in `backend/alembic.ini`
-- [ ] T016 Create Alembic environment loader in `infra/migrations/env.py`
-- [ ] T017 [P] Create backend contract test package marker in `backend/tests/contract/__init__.py`
-- [ ] T018 [P] Create backend integration test package marker in `backend/tests/integration/__init__.py`
-- [ ] T019 [P] Create backend unit test package marker in `backend/tests/unit/__init__.py`
-- [ ] T020 Create local service compose file in `infra/docker/docker-compose.dev.yml`
-- [ ] T021 Document backend environment variables in `.env.example`
-- [ ] T022 Add frontend API environment template in `../puhua_KnowledgeUI/.env.example`
-- [ ] T023 Add frontend API base config file in `../puhua_KnowledgeUI/src/lib/api-config.ts`
-- [ ] T024 Add frontend typed API client shell in `../puhua_KnowledgeUI/src/lib/api-client.ts`
-- [ ] T025 Add frontend query key factory shell in `../puhua_KnowledgeUI/src/lib/query-keys.ts`
-- [ ] T026 Add frontend DTO mapper shell in `../puhua_KnowledgeUI/src/lib/api-mappers.ts`
+- [X] T001 Create backend package entrypoint in `backend/src/__init__.py`
+- [X] T002 Create FastAPI application shell in `backend/src/main.py`
+- [X] T003 [P] Create backend API package marker in `backend/src/api/__init__.py`
+- [X] T004 [P] Create backend route package marker in `backend/src/api/routes/__init__.py`
+- [X] T005 [P] Create backend dependency package marker in `backend/src/api/dependencies/__init__.py`
+- [X] T006 [P] Create backend core package marker in `backend/src/core/__init__.py`
+- [X] T007 [P] Create backend model package marker in `backend/src/models/__init__.py`
+- [X] T008 [P] Create backend schema package marker in `backend/src/schemas/__init__.py`
+- [X] T009 [P] Create backend service package marker in `backend/src/services/__init__.py`
+- [X] T010 [P] Create backend integration package marker in `backend/src/integrations/__init__.py`
+- [X] T011 [P] Create backend worker package marker in `backend/src/workers/__init__.py`
+- [X] T012 Define backend runtime dependencies in `backend/requirements.txt`
+- [X] T013 Define backend development dependencies in `backend/requirements-dev.txt`
+- [X] T014 Configure pytest defaults in `backend/pytest.ini`
+- [X] T015 Configure Alembic entrypoint in `backend/alembic.ini`
+- [X] T016 Create Alembic environment loader in `infra/migrations/env.py`
+- [X] T017 [P] Create backend contract test package marker in `backend/tests/contract/__init__.py`
+- [X] T018 [P] Create backend integration test package marker in `backend/tests/integration/__init__.py`
+- [X] T019 [P] Create backend unit test package marker in `backend/tests/unit/__init__.py`
+- [X] T020 Create local service compose file in `infra/docker/docker-compose.dev.yml`
+- [X] T021 Document backend environment variables in `.env.example`
+- [X] T022 Add frontend API environment template in `../puhua_KnowledgeUI/.env.example`
+- [X] T023 Add frontend API base config file in `../puhua_KnowledgeUI/src/lib/api-config.ts`
+- [X] T024 Add frontend typed API client shell in `../puhua_KnowledgeUI/src/lib/api-client.ts`
+- [X] T025 Add frontend query key factory shell in `../puhua_KnowledgeUI/src/lib/query-keys.ts`
+- [X] T026 Add frontend DTO mapper shell in `../puhua_KnowledgeUI/src/lib/api-mappers.ts`
 
 ---
 
@@ -55,52 +55,52 @@
 
 **Critical**: No user story work starts until this phase is complete.
 
-- [ ] T027 Implement typed environment settings in `backend/src/core/settings.py`
-- [ ] T028 Implement structured logging configuration in `backend/src/core/logging.py`
-- [ ] T029 Implement application error types in `backend/src/core/errors.py`
-- [ ] T030 Implement API exception handlers in `backend/src/api/dependencies/error_handlers.py`
-- [ ] T031 Configure async SQLAlchemy engine in `backend/src/core/database.py`
-- [ ] T032 Create declarative model base in `backend/src/models/base.py`
-- [ ] T033 Create shared timestamp mixin in `backend/src/models/mixins.py`
-- [ ] T034 Create first Alembic revision placeholder in `infra/migrations/versions/0001_initial.py`
-- [ ] T035 Implement database session dependency in `backend/src/api/dependencies/session.py`
-- [ ] T036 Implement repository transaction helper in `backend/src/services/unit_of_work.py`
-- [ ] T037 Define shared enum values in `backend/src/models/enums.py`
-- [ ] T038 Define shared Pydantic config base in `backend/src/schemas/base.py`
-- [ ] T039 Implement request correlation middleware in `backend/src/api/dependencies/request_context.py`
-- [ ] T040 Implement CORS middleware configuration for Vite frontend in `backend/src/api/dependencies/cors.py`
-- [ ] T041 Implement bearer token parsing dependency in `backend/src/api/dependencies/auth.py`
-- [ ] T042 Implement unified identity stub client in `backend/src/integrations/identity_stub.py`
-- [ ] T043 Implement current user resolver service in `backend/src/services/identity_service.py`
-- [ ] T044 Implement `/health` route in `backend/src/api/routes/health.py`
-- [ ] T045 Implement `/me` route in `backend/src/api/routes/me.py`
-- [ ] T046 Register base routes and middleware in `backend/src/main.py`
-- [ ] T047 Define UserIdentity model in `backend/src/models/user_identity.py`
-- [ ] T048 Define AuditEvent model in `backend/src/models/audit_event.py`
-- [ ] T049 Define PermissionRule model in `backend/src/models/permission_rule.py`
-- [ ] T050 Define AuthorizationRequest model in `backend/src/models/authorization_request.py`
-- [ ] T051 Implement audit retention date helper in `backend/src/services/retention_service.py`
-- [ ] T052 Implement append-only audit service in `backend/src/services/audit_service.py`
-- [ ] T053 Implement authorization decision value object in `backend/src/services/authorization_types.py`
-- [ ] T054 Implement local permission rule evaluator in `backend/src/services/authorization_service.py`
-- [ ] T055 Implement object storage client wrapper in `backend/src/integrations/object_storage.py`
-- [ ] T056 Implement OpenSearch client wrapper in `backend/src/integrations/opensearch_client.py`
-- [ ] T057 Implement Qdrant client wrapper in `backend/src/integrations/qdrant_client.py`
-- [ ] T058 Implement Redis client wrapper in `backend/src/integrations/redis_client.py`
-- [ ] T059 Implement Celery application setup in `backend/src/workers/celery_app.py`
-- [ ] T060 Create backend test fixtures in `backend/tests/conftest.py`
-- [ ] T061 Create seed identity users in `infra/seed/users.json`
-- [ ] T062 Create seed confidentiality roles in `infra/seed/roles.json`
-- [ ] T063 Define frontend API DTO types in `../puhua_KnowledgeUI/src/lib/api-types.ts`
-- [ ] T064 Implement frontend JSON fetch wrapper in `../puhua_KnowledgeUI/src/lib/api-client.ts`
-- [ ] T065 Implement frontend API error normalizer in `../puhua_KnowledgeUI/src/lib/api-errors.ts`
-- [ ] T066 Implement frontend enum label mappers in `../puhua_KnowledgeUI/src/lib/api-mappers.ts`
-- [ ] T067 Add React Query client provider to root route in `../puhua_KnowledgeUI/src/routes/__root.tsx`
-- [ ] T068 Add current-user API module in `../puhua_KnowledgeUI/src/lib/me-api.ts`
-- [ ] T069 Replace hard-coded current user display with `/me` query in `../puhua_KnowledgeUI/src/routes/__root.tsx`
-- [ ] T070 Add frontend API health smoke helper in `../puhua_KnowledgeUI/src/lib/health-api.ts`
-- [ ] T071 Add local backend URL notes to frontend README in `../puhua_KnowledgeUI/README.md`
-- [ ] T072 Add backend/frontend startup notes to quickstart in `specs/001-private-knowledge-flow/quickstart.md`
+- [X] T027 Implement typed environment settings in `backend/src/core/settings.py`
+- [X] T028 Implement structured logging configuration in `backend/src/core/logging.py`
+- [X] T029 Implement application error types in `backend/src/core/errors.py`
+- [X] T030 Implement API exception handlers in `backend/src/api/dependencies/error_handlers.py`
+- [X] T031 Configure async SQLAlchemy engine in `backend/src/core/database.py`
+- [X] T032 Create declarative model base in `backend/src/models/base.py`
+- [X] T033 Create shared timestamp mixin in `backend/src/models/mixins.py`
+- [X] T034 Create first Alembic revision placeholder in `infra/migrations/versions/0001_initial.py`
+- [X] T035 Implement database session dependency in `backend/src/api/dependencies/session.py`
+- [X] T036 Implement repository transaction helper in `backend/src/services/unit_of_work.py`
+- [X] T037 Define shared enum values in `backend/src/models/enums.py`
+- [X] T038 Define shared Pydantic config base in `backend/src/schemas/base.py`
+- [X] T039 Implement request correlation middleware in `backend/src/api/dependencies/request_context.py`
+- [X] T040 Implement CORS middleware configuration for Vite frontend in `backend/src/api/dependencies/cors.py`
+- [X] T041 Implement bearer token parsing dependency in `backend/src/api/dependencies/auth.py`
+- [X] T042 Implement unified identity stub client in `backend/src/integrations/identity_stub.py`
+- [X] T043 Implement current user resolver service in `backend/src/services/identity_service.py`
+- [X] T044 Implement `/health` route in `backend/src/api/routes/health.py`
+- [X] T045 Implement `/me` route in `backend/src/api/routes/me.py`
+- [X] T046 Register base routes and middleware in `backend/src/main.py`
+- [X] T047 Define UserIdentity model in `backend/src/models/user_identity.py`
+- [X] T048 Define AuditEvent model in `backend/src/models/audit_event.py`
+- [X] T049 Define PermissionRule model in `backend/src/models/permission_rule.py`
+- [X] T050 Define AuthorizationRequest model in `backend/src/models/authorization_request.py`
+- [X] T051 Implement audit retention date helper in `backend/src/services/retention_service.py`
+- [X] T052 Implement append-only audit service in `backend/src/services/audit_service.py`
+- [X] T053 Implement authorization decision value object in `backend/src/services/authorization_types.py`
+- [X] T054 Implement local permission rule evaluator in `backend/src/services/authorization_service.py`
+- [X] T055 Implement object storage client wrapper in `backend/src/integrations/object_storage.py`
+- [X] T056 Implement OpenSearch client wrapper in `backend/src/integrations/opensearch_client.py`
+- [X] T057 Implement Qdrant client wrapper in `backend/src/integrations/qdrant_client.py`
+- [X] T058 Implement Redis client wrapper in `backend/src/integrations/redis_client.py`
+- [X] T059 Implement Celery application setup in `backend/src/workers/celery_app.py`
+- [X] T060 Create backend test fixtures in `backend/tests/conftest.py`
+- [X] T061 Create seed identity users in `infra/seed/users.json`
+- [X] T062 Create seed confidentiality roles in `infra/seed/roles.json`
+- [X] T063 Define frontend API DTO types in `../puhua_KnowledgeUI/src/lib/api-types.ts`
+- [X] T064 Implement frontend JSON fetch wrapper in `../puhua_KnowledgeUI/src/lib/api-client.ts`
+- [X] T065 Implement frontend API error normalizer in `../puhua_KnowledgeUI/src/lib/api-errors.ts`
+- [X] T066 Implement frontend enum label mappers in `../puhua_KnowledgeUI/src/lib/api-mappers.ts`
+- [X] T067 Add React Query client provider to root route in `../puhua_KnowledgeUI/src/routes/__root.tsx`
+- [X] T068 Add current-user API module in `../puhua_KnowledgeUI/src/lib/me-api.ts`
+- [X] T069 Replace hard-coded current user display with `/me` query in `../puhua_KnowledgeUI/src/components/app-sidebar.tsx`
+- [X] T070 Add frontend API health smoke helper in `../puhua_KnowledgeUI/src/lib/health-api.ts`
+- [X] T071 Add local backend URL notes to frontend README in `../puhua_KnowledgeUI/README.md`
+- [X] T072 Add backend/frontend startup notes to quickstart in `specs/001-private-knowledge-flow/quickstart.md`
 
 **Checkpoint**: Backend app starts, `/health` and `/me` are callable from the existing Vite frontend, database sessions work, and frontend API client primitives exist.
 

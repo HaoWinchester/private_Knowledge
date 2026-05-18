@@ -1,0 +1,14 @@
+[
+  {
+    "role": "knowledge_admin",
+    "permissions": ["view_metadata", "view_content", "cite", "export", "approve_strict_access"]
+  },
+  {
+    "role": "domain_expert",
+    "permissions": ["view_metadata", "view_content", "cite"]
+  },
+  {
+    "role": "employee",
+    "permissions": ["view_metadata", "view_content"]
+  }
+]
