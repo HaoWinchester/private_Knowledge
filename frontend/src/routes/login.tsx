@@ -16,6 +16,11 @@ export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "登录 · 普华企业知识库" }] }),
 });
 
+const quickLogin = {
+  email: "admin@puhua.local",
+  password: "Puhua@2026",
+};
+
 function LoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -37,6 +42,12 @@ function LoginPage() {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     loginMutation.mutate({ email, password });
+  };
+
+  const signInQuickly = () => {
+    setEmail(quickLogin.email);
+    setPassword(quickLogin.password);
+    loginMutation.mutate(quickLogin);
   };
 
   return (
@@ -122,6 +133,40 @@ function LoginPage() {
                 {loginMutation.isPending ? "登录中..." : "登录工作台"}
               </Button>
             </form>
+
+            <div className="mt-5 rounded-md border bg-muted/30 p-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div className="font-medium">本地快速登录账号</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    仅用于本地试点调试，账号已写入 SQLite。
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={signInQuickly}
+                  disabled={loginMutation.isPending}
+                >
+                  一键登录
+                </Button>
+              </div>
+              <div className="mt-3 grid gap-1.5 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">账号</span>
+                  <code className="rounded bg-background px-2 py-1 font-mono">
+                    {quickLogin.email}
+                  </code>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">密码</span>
+                  <code className="rounded bg-background px-2 py-1 font-mono">
+                    {quickLogin.password}
+                  </code>
+                </div>
+              </div>
+            </div>
 
             <div className="mt-5 text-center text-sm text-muted-foreground">
               还没有账号？

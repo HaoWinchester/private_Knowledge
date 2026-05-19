@@ -64,6 +64,10 @@ def _retention() -> date:
     return date.today() + timedelta(days=365 * 3)
 
 
+QUICK_LOGIN_EMAIL = "admin@puhua.local"
+QUICK_LOGIN_PASSWORD = "Puhua@2026"
+
+
 def _sqlite_path(database_url: str) -> Path | str:
     prefixes = ("sqlite+aiosqlite:///", "sqlite:///")
     raw = None
@@ -91,6 +95,7 @@ class DatabaseStore:
         self._lock = threading.RLock()
         self._ensure_schema()
         self._seed_if_empty()
+        self._ensure_quick_login_user()
 
     @property
     def database_path(self) -> str:
@@ -130,6 +135,7 @@ class DatabaseStore:
             conn.execute("DELETE FROM records")
             conn.commit()
         self._seed_if_empty()
+        self._ensure_quick_login_user()
 
     def _seed_if_empty(self) -> None:
         if self._count("knowledge_items") > 0:
@@ -368,10 +374,46 @@ class DatabaseStore:
 
     def _find_auth_user_by_email(self, email: str) -> dict[str, object] | None:
         normalized = self._normalize_email(email)
-        for user in self._all_raw("auth_users").values():
+        for record_id, user in self._all_raw("auth_users").items():
             if user.get("email") == normalized:
-                return user
+                return {**user, "__recordId": record_id}
         return None
+
+    def _put_auth_user(
+        self,
+        *,
+        user: UserContext,
+        email: str,
+        password: str,
+        record_id: str | None = None,
+    ) -> None:
+        salt = secrets.token_hex(16)
+        self._put(
+            "auth_users",
+            record_id or user.userId,
+            {
+                "email": self._normalize_email(email),
+                "salt": salt,
+                "passwordHash": self._password_hash(password, salt),
+                "user": user.model_dump(mode="json"),
+            },
+        )
+
+    def _ensure_quick_login_user(self) -> None:
+        existing = self._find_auth_user_by_email(QUICK_LOGIN_EMAIL)
+        user = UserContext(
+            userId=str(existing.get("__recordId")) if existing else "user-quick-admin",
+            displayName="李晓楠",
+            departmentId="dept-presales",
+            departmentName="售前咨询部",
+            roles=["knowledge_admin", "domain_expert"],
+        )
+        self._put_auth_user(
+            user=user,
+            email=QUICK_LOGIN_EMAIL,
+            password=QUICK_LOGIN_PASSWORD,
+            record_id=user.userId,
+        )
 
     def _create_session(self, user_id: str) -> str:
         token = f"pk_{secrets.token_urlsafe(32)}"
@@ -402,16 +444,10 @@ class DatabaseStore:
             departmentName=payload.departmentName.strip() or "知识中台",
             roles=[payload.role],
         )
-        salt = secrets.token_hex(16)
-        self._put(
-            "auth_users",
-            user.userId,
-            {
-                "email": email,
-                "salt": salt,
-                "passwordHash": self._password_hash(payload.password, salt),
-                "user": user.model_dump(mode="json"),
-            },
+        self._put_auth_user(
+            user=user,
+            email=email,
+            password=payload.password,
         )
         return AuthResponse(token=self._create_session(user.userId), user=user)
 

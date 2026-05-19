@@ -53,3 +53,15 @@ async def test_auth_rejects_duplicate_and_bad_password(client: httpx.AsyncClient
         json={"email": "duplicate@example.com", "password": "wrong-password"},
     )
     assert bad_login_response.status_code == 401
+
+
+async def test_quick_login_account_is_seeded(client: httpx.AsyncClient) -> None:
+    response = await client.post(
+        "/auth/login",
+        json={"email": "admin@puhua.local", "password": "Puhua@2026"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["user"]["displayName"] == "李晓楠"
+    assert "knowledge_admin" in payload["user"]["roles"]

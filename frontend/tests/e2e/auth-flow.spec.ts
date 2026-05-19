@@ -16,7 +16,15 @@ test("register creates a database-backed session and logout returns to login", a
   await page.getByRole("button", { name: "创建并进入工作台" }).click();
 
   await expect(page.getByRole("heading", { name: /早上好/ })).toBeVisible();
-  await expect(page.getByText(displayName).first()).toBeVisible();
+  const token = await page.evaluate(() => localStorage.getItem("puhua_auth_token"));
+  expect(token).toMatch(/^pk_/);
+  const me = await page.evaluate(async (authToken) => {
+    const response = await fetch("http://127.0.0.1:8002/me", {
+      headers: { authorization: `Bearer ${authToken}` },
+    });
+    return response.json();
+  }, token);
+  expect(me.displayName).toBe(displayName);
 
   await page.getByRole("button", { name: "退出登录" }).click();
   await expect(page.getByText("登录").first()).toBeVisible();
@@ -31,4 +39,16 @@ test("login rejects invalid credentials with visible feedback", async ({ page })
   await page.getByRole("button", { name: "登录工作台" }).click();
 
   await expect(page.getByText("邮箱或密码不正确")).toBeVisible();
+});
+
+test("quick login account signs in without manual password entry", async ({ page }) => {
+  await page.goto("/login");
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByText("admin@puhua.local")).toBeVisible();
+  await expect(page.getByText("Puhua@2026")).toBeVisible();
+
+  await page.getByRole("button", { name: "一键登录" }).click();
+
+  await expect(page.getByRole("heading", { name: /早上好/ })).toBeVisible();
+  await expect(page.getByText("李晓楠").first()).toBeVisible();
 });
