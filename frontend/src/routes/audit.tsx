@@ -109,35 +109,37 @@ function Audit() {
         </Button>
       </Card>
 
-      <Card>
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40 text-xs text-muted-foreground">
-            <tr>
-              <th className="text-left p-3 font-medium">事件 ID</th>
-              <th className="text-left p-3 font-medium">时间</th>
-              <th className="text-left p-3 font-medium">操作者</th>
-              <th className="text-left p-3 font-medium">操作</th>
-              <th className="text-left p-3 font-medium">对象</th>
-              <th className="text-left p-3 font-medium">上下文</th>
-              <th className="text-left p-3 font-medium">结果</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filtered.map((e) => (
-              <tr key={e.id} className="hover:bg-accent/30">
-                <td className="p-3 text-xs text-muted-foreground tabular-nums">{e.id}</td>
-                <td className="p-3 text-xs tabular-nums">{e.time}</td>
-                <td className="p-3">{e.actor}</td>
-                <td className="p-3">{e.action}</td>
-                <td className="p-3 font-mono text-xs">{e.target}</td>
-                <td className="p-3 text-xs text-muted-foreground">{e.context}</td>
-                <td className="p-3">
-                  <Badge className={`text-[10px] ${resultColor[e.result]}`}>{e.result}</Badge>
-                </td>
+      <Card className="overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-[860px] w-full text-sm">
+            <thead className="bg-muted/40 text-xs text-muted-foreground">
+              <tr>
+                <th className="text-left p-3 font-medium">事件 ID</th>
+                <th className="text-left p-3 font-medium">时间</th>
+                <th className="text-left p-3 font-medium">操作者</th>
+                <th className="text-left p-3 font-medium">操作</th>
+                <th className="text-left p-3 font-medium">对象</th>
+                <th className="text-left p-3 font-medium">上下文</th>
+                <th className="text-left p-3 font-medium">结果</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((e) => (
+                <tr key={e.id} className="hover:bg-accent/30">
+                  <td className="p-3 text-xs text-muted-foreground tabular-nums">{e.id}</td>
+                  <td className="p-3 text-xs tabular-nums">{e.time}</td>
+                  <td className="p-3">{e.actor}</td>
+                  <td className="p-3">{e.action}</td>
+                  <td className="p-3 font-mono text-xs">{e.target}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{e.context}</td>
+                  <td className="p-3">
+                    <Badge className={`text-[10px] ${resultColor[e.result]}`}>{e.result}</Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <div className="text-xs text-muted-foreground text-center">
