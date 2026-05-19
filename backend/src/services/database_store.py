@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import hmac
+import secrets
 import sqlite3
 import threading
 from datetime import date, timedelta
@@ -17,6 +20,7 @@ from src.models.enums import (
     ReviewDecisionValue,
     ReviewGroup,
 )
+from src.schemas.auth import AuthResponse, LoginRequest, RegisterRequest
 from src.schemas.domain import (
     ApplicationKeyRotationResponse,
     ApplicationPolicyState,
@@ -49,6 +53,7 @@ from src.schemas.domain import (
     SearchResponse,
     now_utc,
 )
+from src.schemas.user import UserContext
 
 
 def _id(prefix: str) -> str:
@@ -278,6 +283,14 @@ class DatabaseStore:
             ).fetchall()
         return {row["record_id"]: model_cls.model_validate_json(row["payload"]) for row in rows}
 
+    def _all_raw(self, collection: str) -> dict[str, dict[str, object]]:
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
+                "SELECT record_id, payload FROM records WHERE collection = ? ORDER BY rowid",
+                (collection,),
+            ).fetchall()
+        return {row["record_id"]: json.loads(row["payload"]) for row in rows}
+
     def _delete(self, collection: str, record_id: str) -> None:
         with self._lock, self._connect() as conn:
             conn.execute(
@@ -338,6 +351,92 @@ class DatabaseStore:
     @property
     def application_policies(self) -> ApplicationPolicyState:
         return self._get("application_policies", "singleton", ApplicationPolicyState) or ApplicationPolicyState()
+
+    @staticmethod
+    def _normalize_email(email: str) -> str:
+        return email.strip().lower()
+
+    @staticmethod
+    def _password_hash(password: str, salt: str) -> str:
+        digest = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt.encode("utf-8"),
+            120_000,
+        )
+        return digest.hex()
+
+    def _find_auth_user_by_email(self, email: str) -> dict[str, object] | None:
+        normalized = self._normalize_email(email)
+        for user in self._all_raw("auth_users").values():
+            if user.get("email") == normalized:
+                return user
+        return None
+
+    def _create_session(self, user_id: str) -> str:
+        token = f"pk_{secrets.token_urlsafe(32)}"
+        self._put(
+            "auth_sessions",
+            token,
+            {
+                "token": token,
+                "userId": user_id,
+                "createdAt": now_utc().isoformat(),
+            },
+        )
+        return token
+
+    def register_user(self, payload: RegisterRequest) -> AuthResponse:
+        email = self._normalize_email(payload.email)
+        if not email or "@" not in email:
+            raise ValueError("请输入有效邮箱")
+        if len(payload.password) < 8:
+            raise ValueError("密码至少需要 8 位")
+        if self._find_auth_user_by_email(email):
+            raise ValueError("该邮箱已经注册")
+
+        user = UserContext(
+            userId=_id("user"),
+            displayName=payload.displayName.strip(),
+            departmentId=f"dept-{payload.departmentName.strip() or 'knowledge'}",
+            departmentName=payload.departmentName.strip() or "知识中台",
+            roles=[payload.role],
+        )
+        salt = secrets.token_hex(16)
+        self._put(
+            "auth_users",
+            user.userId,
+            {
+                "email": email,
+                "salt": salt,
+                "passwordHash": self._password_hash(payload.password, salt),
+                "user": user.model_dump(mode="json"),
+            },
+        )
+        return AuthResponse(token=self._create_session(user.userId), user=user)
+
+    def login_user(self, payload: LoginRequest) -> AuthResponse | None:
+        user_record = self._find_auth_user_by_email(payload.email)
+        if not user_record:
+            return None
+        salt = str(user_record["salt"])
+        expected = str(user_record["passwordHash"])
+        actual = self._password_hash(payload.password, salt)
+        if not hmac.compare_digest(actual, expected):
+            return None
+        user = UserContext.model_validate(user_record["user"])
+        return AuthResponse(token=self._create_session(user.userId), user=user)
+
+    def resolve_user_by_token(self, token: str | None) -> UserContext | None:
+        if not token:
+            return None
+        session = self._all_raw("auth_sessions").get(token)
+        if not session:
+            return None
+        user_record = self._all_raw("auth_users").get(str(session["userId"]))
+        if not user_record:
+            return None
+        return UserContext.model_validate(user_record["user"])
 
     def _put_version(self, item_id: str, version: KnowledgeVersion) -> None:
         self._put("knowledge_versions", f"{item_id}|{version.id}", version)

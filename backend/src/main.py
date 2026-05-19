@@ -8,6 +8,7 @@ from src.api.dependencies.request_context import CorrelationIdMiddleware
 from src.api.routes import (
     application_policies,
     applications,
+    auth,
     audit_events,
     authorization_requests,
     business_action_bindings,
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     configure_cors(app, settings)
     register_error_handlers(app)
     app.include_router(health.router)
+    app.include_router(auth.router)
     app.include_router(me.router)
     app.include_router(knowledge_items.router)
     app.include_router(knowledge_versions.router)

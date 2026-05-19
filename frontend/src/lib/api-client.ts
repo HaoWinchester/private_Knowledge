@@ -1,5 +1,6 @@
 import { API_BASE_URL, API_TOKEN } from "./api-config";
 import { ApiError } from "./api-errors";
+import { getStoredAuthToken } from "./auth-session";
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
@@ -10,7 +11,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const headers = new Headers(options.headers);
   headers.set("accept", "application/json");
 
-  const token = options.token ?? API_TOKEN;
+  const token = options.token ?? getStoredAuthToken() ?? API_TOKEN;
   if (token) {
     headers.set("authorization", `Bearer ${token}`);
   }
@@ -28,13 +29,17 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   });
 
   if (!response.ok) {
-    let payload: { code?: string; message?: string } = {};
+    let payload: { code?: string; detail?: string; message?: string } = {};
     try {
       payload = await response.json();
     } catch {
       payload = { message: response.statusText };
     }
-    throw new ApiError(payload.message ?? "请求失败", response.status, payload.code);
+    throw new ApiError(
+      payload.message ?? payload.detail ?? "请求失败",
+      response.status,
+      payload.code,
+    );
   }
 
   if (response.status === 204) {

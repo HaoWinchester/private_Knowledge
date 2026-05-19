@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReviewRouteImport } from './routes/review'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as AuditRouteImport } from './routes/audit'
@@ -36,9 +38,19 @@ const ReviewRoute = ReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -84,7 +96,9 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuditRoute
   '/integrations': typeof IntegrationsRoute
   '/library': typeof LibraryRouteWithChildren
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
+  '/register': typeof RegisterRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/submit': typeof SubmitRoute
@@ -97,7 +111,9 @@ export interface FileRoutesByTo {
   '/audit': typeof AuditRoute
   '/integrations': typeof IntegrationsRoute
   '/library': typeof LibraryRouteWithChildren
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
+  '/register': typeof RegisterRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/submit': typeof SubmitRoute
@@ -111,7 +127,9 @@ export interface FileRoutesById {
   '/audit': typeof AuditRoute
   '/integrations': typeof IntegrationsRoute
   '/library': typeof LibraryRouteWithChildren
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
+  '/register': typeof RegisterRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/submit': typeof SubmitRoute
@@ -126,7 +144,9 @@ export interface FileRouteTypes {
     | '/audit'
     | '/integrations'
     | '/library'
+    | '/login'
     | '/operations'
+    | '/register'
     | '/review'
     | '/settings'
     | '/submit'
@@ -139,7 +159,9 @@ export interface FileRouteTypes {
     | '/audit'
     | '/integrations'
     | '/library'
+    | '/login'
     | '/operations'
+    | '/register'
     | '/review'
     | '/settings'
     | '/submit'
@@ -152,7 +174,9 @@ export interface FileRouteTypes {
     | '/audit'
     | '/integrations'
     | '/library'
+    | '/login'
     | '/operations'
+    | '/register'
     | '/review'
     | '/settings'
     | '/submit'
@@ -166,7 +190,9 @@ export interface RootRouteChildren {
   AuditRoute: typeof AuditRoute
   IntegrationsRoute: typeof IntegrationsRoute
   LibraryRoute: typeof LibraryRouteWithChildren
+  LoginRoute: typeof LoginRoute
   OperationsRoute: typeof OperationsRoute
+  RegisterRoute: typeof RegisterRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   SubmitRoute: typeof SubmitRoute
@@ -195,11 +221,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/operations': {
       id: '/operations'
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -272,7 +312,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuditRoute: AuditRoute,
   IntegrationsRoute: IntegrationsRoute,
   LibraryRoute: LibraryRouteWithChildren,
+  LoginRoute: LoginRoute,
   OperationsRoute: OperationsRoute,
+  RegisterRoute: RegisterRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   SubmitRoute: SubmitRoute,

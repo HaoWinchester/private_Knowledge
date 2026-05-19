@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -98,45 +99,56 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const currentPath = useRouterState({ select: (state) => state.location.pathname });
+  const isAuthRoute = currentPath === "/login" || currentPath === "/register";
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={150}>
-        <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background">
-            <AppSidebar />
-            <div className="flex-1 flex flex-col min-w-0">
-              <header className="sticky top-0 z-30 h-14 flex items-center gap-3 border-b bg-card/80 backdrop-blur px-4">
-                <SidebarTrigger />
-                <div className="relative flex-1 max-w-xl">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="搜索知识、客户、项目、标签…  按 / 聚焦"
-                    className="pl-9 h-9 bg-muted/40 border-transparent focus-visible:bg-background"
-                  />
-                </div>
-                <div className="ml-auto flex items-center gap-1">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to="/audit">
-                      <Bell className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to="/settings">
-                      <HelpCircle className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild size="sm" className="ml-2">
-                    <Link to="/submit">+ 新建入库</Link>
-                  </Button>
-                </div>
-              </header>
-              <main className="flex-1 min-w-0">
-                <Outlet />
-              </main>
+        {isAuthRoute ? (
+          <>
+            <div className="min-h-screen bg-background">
+              <Outlet />
             </div>
-          </div>
-          <Toaster richColors position="top-right" />
-        </SidebarProvider>
+            <Toaster richColors position="top-right" />
+          </>
+        ) : (
+          <SidebarProvider>
+            <div className="min-h-screen flex w-full bg-background">
+              <AppSidebar />
+              <div className="flex-1 flex flex-col min-w-0">
+                <header className="sticky top-0 z-30 h-14 flex items-center gap-3 border-b bg-card/80 backdrop-blur px-4">
+                  <SidebarTrigger />
+                  <div className="relative flex-1 max-w-xl">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="搜索知识、客户、项目、标签…  按 / 聚焦"
+                      className="pl-9 h-9 bg-muted/40 border-transparent focus-visible:bg-background"
+                    />
+                  </div>
+                  <div className="ml-auto flex items-center gap-1">
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/audit">
+                        <Bell className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/settings">
+                        <HelpCircle className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" className="ml-2">
+                      <Link to="/submit">+ 新建入库</Link>
+                    </Button>
+                  </div>
+                </header>
+                <main className="flex-1 min-w-0">
+                  <Outlet />
+                </main>
+              </div>
+            </div>
+            <Toaster richColors position="top-right" />
+          </SidebarProvider>
+        )}
       </TooltipProvider>
     </QueryClientProvider>
   );

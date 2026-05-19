@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
@@ -12,7 +12,9 @@ import {
   Settings,
   BookOpen,
   Plug,
+  LogOut,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +30,7 @@ import {
 import { getCurrentUser } from "@/lib/me-api";
 import { queryKeys } from "@/lib/query-keys";
 import { roleSummary } from "@/lib/api-mappers";
+import { clearAuthSession } from "@/lib/auth-session";
 
 type NavItem = { title: string; url: string; icon: typeof LayoutDashboard; exact?: boolean };
 const groups: { label: string; items: NavItem[] }[] = [
@@ -62,6 +65,7 @@ const groups: { label: string; items: NavItem[] }[] = [
 ];
 
 export function AppSidebar() {
+  const navigate = useNavigate();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const { data: currentUser } = useQuery({
     queryKey: queryKeys.me,
@@ -122,6 +126,18 @@ export function AppSidebar() {
             <span className="font-medium text-sidebar-foreground">{displayName}</span>
             <span className="text-muted-foreground">{roleText}</span>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="退出登录"
+            className="ml-auto h-7 w-7 group-data-[collapsible=icon]:hidden"
+            onClick={async () => {
+              clearAuthSession();
+              await navigate({ to: "/login" });
+            }}
+          >
+            <LogOut className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>

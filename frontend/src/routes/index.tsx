@@ -20,6 +20,7 @@ import { classificationColor, statusColor } from "@/lib/ui-models";
 import { listKnowledgeItems } from "@/lib/knowledge-api";
 import { listIntakeRequests } from "@/lib/review-api";
 import { getOperationsSummary } from "@/lib/operations-api";
+import { getCurrentUser } from "@/lib/me-api";
 import { confidentialityLabels, mapKnowledgeCardToUi, reviewGroupLabel } from "@/lib/api-mappers";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -42,6 +43,10 @@ function Dashboard() {
   const { data: summaryData } = useQuery({
     queryKey: queryKeys.operations.summary,
     queryFn: getOperationsSummary,
+  });
+  const { data: currentUser } = useQuery({
+    queryKey: queryKeys.me,
+    queryFn: getCurrentUser,
   });
   const backendKnowledge = knowledgeData?.items.map(mapKnowledgeCardToUi) ?? [];
   const backendPending =
@@ -101,10 +106,16 @@ function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs text-muted-foreground">2026 年 5 月 18 日 · 周一</p>
-          <h1 className="text-2xl font-semibold mt-1">早上好，李晓楠</h1>
+          <h1 className="text-2xl font-semibold mt-1">
+            早上好，{currentUser?.displayName ?? "知识管理员"}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            你有 <span className="text-foreground font-medium">3 条高优先审核</span> 与{" "}
-            <span className="text-foreground font-medium">2 条授权申请</span> 等待处理。
+            你有{" "}
+            <span className="text-foreground font-medium">
+              {backendPending.length} 条待审核任务
+            </span>{" "}
+            等待处理，其中{" "}
+            <span className="text-foreground font-medium">{highPriorityCount} 条高优先</span>。
           </p>
         </div>
         <div className="flex gap-2">
