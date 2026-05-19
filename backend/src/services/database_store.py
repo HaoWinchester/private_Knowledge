@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+import json
+import sqlite3
+import threading
+from datetime import date, timedelta
+from pathlib import Path
 from uuid import uuid4
 
+from src.core.settings import get_settings
 from src.models.enums import (
     AuthorizationStatus,
     ConfidentialityLevel,
@@ -54,34 +59,108 @@ def _retention() -> date:
     return date.today() + timedelta(days=365 * 3)
 
 
-class MemoryStore:
+def _sqlite_path(database_url: str) -> Path | str:
+    prefixes = ("sqlite+aiosqlite:///", "sqlite:///")
+    raw = None
+    for prefix in prefixes:
+        if database_url.startswith(prefix):
+            raw = database_url.removeprefix(prefix)
+            break
+    if raw is None:
+        raise ValueError("Only sqlite database_url values are supported for the local store")
+    if raw == ":memory:":
+        return raw
+    path = Path(raw)
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+class DatabaseStore:
+    """SQLite-backed store used by the pilot API.
+
+    The public methods intentionally mirror the previous in-memory store so the
+    API route surface can move to database persistence without a broad rewrite.
+    """
+
     def __init__(self) -> None:
-        self.reset()
+        self._db_path = _sqlite_path(get_settings().database_url)
+        self._lock = threading.RLock()
+        self._ensure_schema()
+        self._seed_if_empty()
+
+    @property
+    def database_path(self) -> str:
+        return str(self._db_path)
+
+    def _connect(self) -> sqlite3.Connection:
+        if self._db_path != ":memory:":
+            Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(self._db_path, timeout=30, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _ensure_schema(self) -> None:
+        with self._lock, self._connect() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS records (
+                    collection TEXT NOT NULL,
+                    record_id TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (collection, record_id)
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_records_collection
+                ON records(collection)
+                """
+            )
+            conn.commit()
 
     def reset(self) -> None:
-        self.versions: dict[str, list[KnowledgeVersion]] = {}
-        self.items: dict[str, KnowledgeItemDetail] = {}
-        self.intake_requests: dict[str, IntakeRequest] = {}
-        self.authorization_requests: dict[str, AuthorizationRequest] = {}
-        self.audit_events: dict[str, AuditEvent] = {}
-        self.quality_signals: dict[str, QualitySignal] = {}
-        self.business_bindings: dict[str, BusinessActionBinding] = {}
-        self.application_policies = ApplicationPolicyState()
-        self.applications: dict[str, ApplicationSummary] = {
-            "pilot-agent": ApplicationSummary(
+        with self._lock, self._connect() as conn:
+            conn.execute("DELETE FROM records")
+            conn.commit()
+        self._seed_if_empty()
+
+    def _seed_if_empty(self) -> None:
+        if self._count("knowledge_items") > 0:
+            return
+        self._put(
+            "applications",
+            "pilot-agent",
+            ApplicationSummary(
                 applicationId="pilot-agent",
                 name="Agent 平台试点",
                 status="connected",
                 monthlyCalls=1284,
                 deniedCalls=37,
                 pilot=True,
-            )
-        }
-        self._seed()
+            ),
+        )
+        self._put("application_policies", "singleton", ApplicationPolicyState())
+        self._seed_knowledge_items()
+        self.create_submission(
+            KnowledgeSubmissionCreate(
+                title="AI 产品经理岗位面试评估框架",
+                knowledgeType="form",
+                source={"sourceType": "form", "displayName": "招聘评估表"},
+                responsibleUserId="user-knowledge-admin",
+                roleDirection="HR",
+                businessTheme="面试评估",
+                confidentialityLevel=ConfidentialityLevel.DEPARTMENT_VISIBLE,
+                summary="AI 产品经理候选人评估维度、追问清单和典型反例。",
+                suggestedTags=["招聘", "AI产品", "面试"],
+                applicableScope="HR、面试官",
+                validUntil=date(2027, 5, 18),
+            ),
+            submitter_user_id="user-delivery",
+        )
 
-    def _seed(self) -> None:
-        if self.items:
-            return
+    def _seed_knowledge_items(self) -> None:
         samples = [
             (
                 "K-2026-0142",
@@ -129,43 +208,148 @@ class MemoryStore:
                 createdAt=now_utc(),
                 retentionUntil=_retention(),
             )
-            self.versions[item_id] = [version]
-            self.items[item_id] = KnowledgeItemDetail(
-                id=item_id,
-                title=title,
-                summary=summary,
-                status=KnowledgeStatus.PUBLISHED,
-                confidentialityLevel=level,
-                currentVersionId=version.id,
-                sourceDisplayName=source,
-                applicableScope=scope,
-                tags=tags,
-                metadataOnly=level == ConfidentialityLevel.STRICTLY_CONTROLLED,
-                authorizationRequestAvailable=level == ConfidentialityLevel.STRICTLY_CONTROLLED,
-                contentPreview=None
-                if level == ConfidentialityLevel.STRICTLY_CONTROLLED
-                else f"{title}\n\n{summary}\n\n适用范围：{scope}",
-                versions=[version],
-                permissions=["view_metadata"]
-                if level == ConfidentialityLevel.STRICTLY_CONTROLLED
-                else ["view_metadata", "view_content", "cite"],
+            self._put_version(item_id, version)
+            self._put(
+                "knowledge_items",
+                item_id,
+                KnowledgeItemDetail(
+                    id=item_id,
+                    title=title,
+                    summary=summary,
+                    status=KnowledgeStatus.PUBLISHED,
+                    confidentialityLevel=level,
+                    currentVersionId=version.id,
+                    sourceDisplayName=source,
+                    applicableScope=scope,
+                    tags=tags,
+                    metadataOnly=level == ConfidentialityLevel.STRICTLY_CONTROLLED,
+                    authorizationRequestAvailable=level == ConfidentialityLevel.STRICTLY_CONTROLLED,
+                    contentPreview=None
+                    if level == ConfidentialityLevel.STRICTLY_CONTROLLED
+                    else f"{title}\n\n{summary}\n\n适用范围：{scope}",
+                    versions=[version],
+                    permissions=["view_metadata"]
+                    if level == ConfidentialityLevel.STRICTLY_CONTROLLED
+                    else ["view_metadata", "view_content", "cite"],
+                ),
             )
-        self.create_submission(
-            KnowledgeSubmissionCreate(
-                title="AI 产品经理岗位面试评估框架",
-                knowledgeType="form",
-                source={"sourceType": "form", "displayName": "招聘评估表"},
-                responsibleUserId="user-knowledge-admin",
-                roleDirection="HR",
-                businessTheme="面试评估",
-                confidentialityLevel=ConfidentialityLevel.DEPARTMENT_VISIBLE,
-                summary="AI 产品经理候选人评估维度、追问清单和典型反例。",
-                suggestedTags=["招聘", "AI产品", "面试"],
-                applicableScope="HR、面试官",
-                validUntil=date(2027, 5, 18),
-            ),
-            submitter_user_id="user-delivery",
-        )
+
+    def _count(self, collection: str) -> int:
+        with self._lock, self._connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS count FROM records WHERE collection = ?",
+                (collection,),
+            ).fetchone()
+            return int(row["count"])
+
+    def _put(self, collection: str, record_id: str, payload: object) -> None:
+        if hasattr(payload, "model_dump"):
+            data = payload.model_dump(mode="json")
+        else:
+            data = payload
+        encoded = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+        with self._lock, self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO records(collection, record_id, payload)
+                VALUES (?, ?, ?)
+                ON CONFLICT(collection, record_id)
+                DO UPDATE SET payload = excluded.payload, updated_at = CURRENT_TIMESTAMP
+                """,
+                (collection, record_id, encoded),
+            )
+            conn.commit()
+
+    def _get(self, collection: str, record_id: str, model_cls):
+        with self._lock, self._connect() as conn:
+            row = conn.execute(
+                "SELECT payload FROM records WHERE collection = ? AND record_id = ?",
+                (collection, record_id),
+            ).fetchone()
+        if row is None:
+            return None
+        return model_cls.model_validate_json(row["payload"])
+
+    def _all(self, collection: str, model_cls) -> dict[str, object]:
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
+                "SELECT record_id, payload FROM records WHERE collection = ? ORDER BY rowid",
+                (collection,),
+            ).fetchall()
+        return {row["record_id"]: model_cls.model_validate_json(row["payload"]) for row in rows}
+
+    def _delete(self, collection: str, record_id: str) -> None:
+        with self._lock, self._connect() as conn:
+            conn.execute(
+                "DELETE FROM records WHERE collection = ? AND record_id = ?",
+                (collection, record_id),
+            )
+            conn.commit()
+
+    @property
+    def items(self) -> dict[str, KnowledgeItemDetail]:
+        return self._all("knowledge_items", KnowledgeItemDetail)
+
+    @property
+    def versions(self) -> dict[str, list[KnowledgeVersion]]:
+        grouped: dict[str, list[KnowledgeVersion]] = {}
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT record_id, payload
+                FROM records
+                WHERE collection = 'knowledge_versions'
+                ORDER BY rowid
+                """
+            ).fetchall()
+        for row in rows:
+            item_id = row["record_id"].split("|", 1)[0]
+            grouped.setdefault(item_id, []).append(
+                KnowledgeVersion.model_validate_json(row["payload"])
+            )
+        for item_versions in grouped.values():
+            item_versions.sort(key=lambda version: version.versionNumber)
+        return grouped
+
+    @property
+    def intake_requests(self) -> dict[str, IntakeRequest]:
+        return self._all("intake_requests", IntakeRequest)
+
+    @property
+    def authorization_requests(self) -> dict[str, AuthorizationRequest]:
+        return self._all("authorization_requests", AuthorizationRequest)
+
+    @property
+    def audit_events(self) -> dict[str, AuditEvent]:
+        return self._all("audit_events", AuditEvent)
+
+    @property
+    def quality_signals(self) -> dict[str, QualitySignal]:
+        return self._all("quality_signals", QualitySignal)
+
+    @property
+    def business_bindings(self) -> dict[str, BusinessActionBinding]:
+        return self._all("business_bindings", BusinessActionBinding)
+
+    @property
+    def applications(self) -> dict[str, ApplicationSummary]:
+        return self._all("applications", ApplicationSummary)
+
+    @property
+    def application_policies(self) -> ApplicationPolicyState:
+        return self._get("application_policies", "singleton", ApplicationPolicyState) or ApplicationPolicyState()
+
+    def _put_version(self, item_id: str, version: KnowledgeVersion) -> None:
+        self._put("knowledge_versions", f"{item_id}|{version.id}", version)
+
+    def _get_versions(self, item_id: str) -> list[KnowledgeVersion]:
+        versions = self.versions.get(item_id, [])
+        versions.sort(key=lambda version: version.versionNumber)
+        return versions
+
+    def _put_item(self, item: KnowledgeItemDetail) -> None:
+        item.versions = self._get_versions(item.id)
+        self._put("knowledge_items", item.id, item)
 
     def audit(
         self,
@@ -190,7 +374,7 @@ class MemoryStore:
             createdAt=now_utc(),
             retentionUntil=_retention(),
         )
-        self.audit_events[event.id] = event
+        self._put("audit_events", event.id, event)
         return event
 
     def list_items(
@@ -207,11 +391,7 @@ class MemoryStore:
         if status:
             items = [item for item in items if item.status == status]
         if confidentiality_level:
-            items = [
-                item
-                for item in items
-                if item.confidentialityLevel == confidentiality_level
-            ]
+            items = [item for item in items if item.confidentialityLevel == confidentiality_level]
         if query:
             lowered = query.lower()
             items = [
@@ -224,9 +404,9 @@ class MemoryStore:
         return [KnowledgeCard(**item.model_dump()) for item in items]
 
     def get_item(self, item_id: str) -> KnowledgeItemDetail | None:
-        item = self.items.get(item_id)
+        item = self._get("knowledge_items", item_id, KnowledgeItemDetail)
         if item:
-            item.versions = self.versions.get(item_id, [])
+            item.versions = self._get_versions(item_id)
         return item
 
     def create_submission(
@@ -241,7 +421,7 @@ class MemoryStore:
             createdAt=now_utc(),
             retentionUntil=_retention(),
         )
-        self.versions[item_id] = [version]
+        self._put_version(item_id, version)
         item = KnowledgeItemDetail(
             id=item_id,
             title=payload.title,
@@ -258,7 +438,7 @@ class MemoryStore:
             versions=[version],
             permissions=["view_metadata"],
         )
-        self.items[item_id] = item
+        self._put("knowledge_items", item_id, item)
         review_group = (
             ReviewGroup.SECURITY_ADMIN
             if payload.confidentialityLevel
@@ -273,12 +453,12 @@ class MemoryStore:
             reviewGroup=review_group,
             createdAt=now_utc(),
         )
-        self.intake_requests[request.id] = request
+        self._put("intake_requests", request.id, request)
         self.audit("submit", actor_user_id=submitter_user_id, knowledge_item_id=item_id)
         return request
 
     def update_item(self, item_id: str, payload: KnowledgeItemUpdate) -> IntakeRequest | None:
-        item = self.items.get(item_id)
+        item = self.get_item(item_id)
         if not item:
             return None
         update = payload.model_dump(exclude_none=True)
@@ -289,6 +469,7 @@ class MemoryStore:
         if "confidentialityLevel" in update:
             item.confidentialityLevel = update["confidentialityLevel"]
         item.status = KnowledgeStatus.PENDING_REVIEW
+        self._put_item(item)
         request = IntakeRequest(
             id=_id("REV"),
             knowledgeItemId=item_id,
@@ -297,14 +478,14 @@ class MemoryStore:
             reviewGroup=ReviewGroup.KNOWLEDGE_ADMIN,
             createdAt=now_utc(),
         )
-        self.intake_requests[request.id] = request
+        self._put("intake_requests", request.id, request)
         return request
 
     def create_version(self, item_id: str, payload: KnowledgeVersionCreate) -> IntakeRequest | None:
-        item = self.items.get(item_id)
+        item = self.get_item(item_id)
         if not item:
             return None
-        next_number = len(self.versions.get(item_id, [])) + 1
+        next_number = len(self._get_versions(item_id)) + 1
         version = KnowledgeVersion(
             id=f"{item_id}-v{next_number}",
             versionNumber=next_number,
@@ -313,10 +494,10 @@ class MemoryStore:
             createdAt=now_utc(),
             retentionUntil=_retention(),
         )
-        self.versions.setdefault(item_id, []).append(version)
-        item.versions = self.versions[item_id]
+        self._put_version(item_id, version)
         item.currentVersionId = version.id
         item.status = KnowledgeStatus.PENDING_REVIEW
+        self._put_item(item)
         request = IntakeRequest(
             id=_id("REV"),
             knowledgeItemId=item_id,
@@ -325,26 +506,29 @@ class MemoryStore:
             reviewGroup=ReviewGroup.KNOWLEDGE_ADMIN,
             createdAt=now_utc(),
         )
-        self.intake_requests[request.id] = request
+        self._put("intake_requests", request.id, request)
         self.audit("version_change", knowledge_item_id=item_id)
         return request
 
     def review_request(
         self, request_id: str, payload: ReviewDecisionCreate, reviewer_user_id: str
     ) -> ReviewDecision | None:
-        request = self.intake_requests.get(request_id)
+        request = self._get("intake_requests", request_id, IntakeRequest)
         if not request:
             return None
-        item = self.items.get(request.knowledgeItemId)
+        item = self.get_item(request.knowledgeItemId)
         if not item:
             return None
         if payload.decision == ReviewDecisionValue.APPROVE:
             request.status = IntakeStatus.APPROVED
             item.status = KnowledgeStatus.PUBLISHED
-            for version in self.versions.get(item.id, []):
+            versions = self._get_versions(item.id)
+            for version in versions:
                 version.effectiveStatus = "superseded"
-            if self.versions.get(item.id):
-                self.versions[item.id][-1].effectiveStatus = "effective"
+                self._put_version(item.id, version)
+            if versions:
+                versions[-1].effectiveStatus = "effective"
+                self._put_version(item.id, versions[-1])
             event_type = "publish"
         elif payload.decision == ReviewDecisionValue.REQUEST_RECTIFICATION:
             request.status = IntakeStatus.RECTIFICATION_REQUIRED
@@ -362,6 +546,9 @@ class MemoryStore:
             reasonCode=payload.reasonCode,
             createdAt=now_utc(),
         )
+        self._put("review_decisions", decision.id, decision)
+        self._put("intake_requests", request.id, request)
+        self._put_item(item)
         self.audit(event_type, actor_user_id=reviewer_user_id, knowledge_item_id=item.id)
         return decision
 
@@ -446,13 +633,13 @@ class MemoryStore:
             createdAt=now_utc(),
             expiresAt=None,
         )
-        self.authorization_requests[request.id] = request
+        self._put("authorization_requests", request.id, request)
         return request
 
     def review_authorization(
         self, request_id: str, payload: AuthorizationReview
     ) -> AuthorizationRequest | None:
-        request = self.authorization_requests.get(request_id)
+        request = self._get("authorization_requests", request_id, AuthorizationRequest)
         if not request:
             return None
         request.status = (
@@ -461,11 +648,12 @@ class MemoryStore:
             else AuthorizationStatus.REJECTED
         )
         request.expiresAt = payload.expiresAt
+        self._put("authorization_requests", request.id, request)
         return request
 
     def create_quality_signal(self, payload: QualitySignalCreate) -> QualitySignal:
         signal = QualitySignal(id=_id("QS"), createdAt=now_utc(), **payload.model_dump())
-        self.quality_signals[signal.id] = signal
+        self._put("quality_signals", signal.id, signal)
         return signal
 
     def operations_summary(self) -> OperationsSummary:
@@ -489,7 +677,11 @@ class MemoryStore:
                 {"businessTheme": "招聘评估", "issueCount": 1, "suggestedAction": "更新评估框架"},
             ],
             expiringItems=[
-                {"knowledgeItemId": item.id, "title": item.title, "validUntil": str(date.today() + timedelta(days=30))}
+                {
+                    "knowledgeItemId": item.id,
+                    "title": item.title,
+                    "validUntil": str(date.today() + timedelta(days=30)),
+                }
                 for item in expiring
             ],
         )
@@ -497,17 +689,20 @@ class MemoryStore:
     def rotate_key(self, application_id: str) -> ApplicationKeyRotationResponse | None:
         if application_id not in self.applications:
             return None
-        return ApplicationKeyRotationResponse(
+        response = ApplicationKeyRotationResponse(
             applicationId=application_id,
             maskedKey=f"sk-{uuid4().hex[:4]}...{uuid4().hex[-4:]}",
             rotatedAt=now_utc(),
         )
+        self.audit("application_key_rotate", application_id=application_id)
+        return response
 
     def update_policies(self, payload: ApplicationPolicyUpdate) -> ApplicationPolicyState:
         data = self.application_policies.model_dump()
         data.update(payload.model_dump(exclude_none=True))
-        self.application_policies = ApplicationPolicyState(**data)
-        return self.application_policies
+        policies = ApplicationPolicyState(**data)
+        self._put("application_policies", "singleton", policies)
+        return policies
 
     def knowledge_service(self, payload: KnowledgeServiceRequest) -> KnowledgeServiceResponse:
         qa = self.answer(QARequest(question=payload.input, businessContext=payload.businessContext))
@@ -536,8 +731,8 @@ class MemoryStore:
         self, payload: BusinessActionBindingCreate
     ) -> BusinessActionBinding:
         binding = BusinessActionBinding(id=_id("BIND"), createdAt=now_utc(), **payload.model_dump())
-        self.business_bindings[binding.id] = binding
+        self._put("business_bindings", binding.id, binding)
         return binding
 
 
-store = MemoryStore()
+store = DatabaseStore()

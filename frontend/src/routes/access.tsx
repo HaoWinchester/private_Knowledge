@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { AccessRequest } from "@/lib/mock-data";
+import type { AccessRequestRow } from "@/lib/ui-models";
 import {
   createAuthorizationRequest,
   listAuthorizationRequests,
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/access")({
   head: () => ({ meta: [{ title: "授权申请 · 普华企业知识库" }] }),
 });
 
-const statusBadge: Record<AccessRequest["status"], string> = {
+const statusBadge: Record<AccessRequestRow["status"], string> = {
   待审批: "bg-info/10 text-info",
   已通过: "bg-success/15 text-success",
   已拒绝: "bg-destructive/10 text-destructive",
@@ -47,7 +47,7 @@ function Access() {
     queryKey: queryKeys.access.requests,
     queryFn: listAuthorizationRequests,
   });
-  const list: AccessRequest[] =
+  const list: AccessRequestRow[] =
     data?.items.map((request) => ({
       id: request.id,
       knowledgeId: request.knowledgeItemId,

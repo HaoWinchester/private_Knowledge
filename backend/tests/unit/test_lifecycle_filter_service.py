@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.services.lifecycle_filter_service import LifecycleFilterService
-from src.services.memory_store import store
+from src.services.database_store import store
 
 
 def test_lifecycle_filter_keeps_reusable_items() -> None:

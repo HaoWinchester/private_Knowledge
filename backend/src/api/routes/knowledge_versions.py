@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from src.schemas.domain import IntakeRequest, KnowledgeVersion, KnowledgeVersionCreate
-from src.services.memory_store import store
+from src.services.database_store import store
 
 router = APIRouter(tags=["knowledge"])
 

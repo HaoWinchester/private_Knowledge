@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import type { AIMessage } from "@/lib/mock-data";
+import type { AIMessage } from "@/lib/ui-models";
 import { answerQuestion } from "@/lib/qa-api";
 import { createAuthorizationRequest } from "@/lib/access-api";
 import { queryKnowledgeService } from "@/lib/integrations-api";
@@ -20,57 +20,9 @@ export const Route = createFileRoute("/ai-chat")({
   head: () => ({ meta: [{ title: "AI 问答 · 普华企业知识库" }] }),
 });
 
-const initial: AIMessage[] = [
-  {
-    role: "user",
-    content: "国网项目的付款节奏是什么？合同里关键违约条款有哪些？",
-  },
-  {
-    role: "assistant",
-    content:
-      "你查询的内容涉及【严格受控】知识。系统已识别相关知识条目，但根据当前授权策略，我无法直接返回合同条款全文。\n\n你可以提交访问授权申请，由项目负责人和安全管理员审批后，系统将以脱敏片段形式提供答案。",
-    blocked: {
-      reason: "严格受控知识 · 缺少显式审批",
-      requestable: true,
-      knowledgeId: "K-2026-0156",
-    },
-    citations: [
-      {
-        id: "K-2026-0156",
-        title: "国网招标项目合同条款定稿",
-        version: "v1.0",
-        scope: "项目负责人、法务、CFO",
-      },
-    ],
-  },
-  {
-    role: "user",
-    content: "那帮我总结一下央企客户售前调研要关注哪些维度。",
-  },
-  {
-    role: "assistant",
-    content:
-      "基于你授权范围内的知识，央企客户售前调研建议覆盖以下 6 个维度：\n\n1. 客户背景与组织架构（集团/二级单位、决策链）\n2. 现有 IT 系统与信创替换计划\n3. 采购流程（招投标节奏、合规要求）\n4. 关键决策人与影响人画像\n5. 历史合作伙伴与服务商关系\n6. 数据合规与安全等保要求\n\n以上来源为已发布、授权范围内的最新生效版本，建议结合具体客户进一步细化。",
-    citations: [
-      {
-        id: "K-2026-0142",
-        title: "央企集团客户售前调研框架",
-        version: "v3.2",
-        scope: "售前、客户经理、方案架构师",
-      },
-      {
-        id: "K-2026-0119",
-        title: "金融客户私有化部署交付复盘",
-        version: "v1.1（脱敏片段）",
-        scope: "交付、售前、研发",
-      },
-    ],
-  },
-];
-
 function AIChat() {
   const queryClient = useQueryClient();
-  const [msgs, setMsgs] = useState<AIMessage[]>(initial);
+  const [msgs, setMsgs] = useState<AIMessage[]>([]);
   const [input, setInput] = useState("");
   const accessMutation = useMutation({
     mutationFn: (knowledgeId: string) =>
@@ -148,17 +100,9 @@ function AIChat() {
         </Button>
         <div className="mt-4 text-xs text-muted-foreground px-2">最近会话</div>
         <div className="mt-2 space-y-1">
-          {["央企售前调研维度", "K8s 灾备方案", "面试评估框架更新", "金融项目复盘要点"].map(
-            (c, i) => (
-              <button
-                key={c}
-                onClick={() => toast.message("已切换会话")}
-                className={`w-full text-left text-sm p-2 rounded hover:bg-accent/40 truncate ${i === 0 ? "bg-accent/60" : ""}`}
-              >
-                {c}
-              </button>
-            ),
-          )}
+          <div className="rounded border border-dashed p-3 text-xs text-muted-foreground">
+            当前会话历史不写入前端静态数据。接入会话表后将在这里读取数据库记录。
+          </div>
         </div>
         <Separator className="my-4" />
         <div className="text-xs text-muted-foreground px-2 mb-2">引用范围</div>

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from src.models.enums import ConfidentialityLevel, KnowledgeStatus
 from src.schemas.domain import KnowledgeCard
-from src.services.memory_store import store
+from src.services.database_store import store
 
 
 class KnowledgeQueryService:

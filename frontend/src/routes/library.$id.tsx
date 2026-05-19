@@ -42,12 +42,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  classificationColor,
-  knowledgeItems,
-  statusColor,
-  type KnowledgeItem,
-} from "@/lib/mock-data";
+import { classificationColor, statusColor, type KnowledgeItem } from "@/lib/ui-models";
 import { createKnowledgeVersion, getKnowledgeItem } from "@/lib/knowledge-api";
 import { createQualitySignal } from "@/lib/quality-api";
 import { createAuthorizationRequest } from "@/lib/access-api";
@@ -76,8 +71,7 @@ function KnowledgeDetail() {
     queryKey: queryKeys.knowledge.detail(id),
     queryFn: () => getKnowledgeItem(id),
   });
-  const fallback = knowledgeItems.find((k) => k.id === id);
-  const item: KnowledgeItem | undefined = detail ? mapKnowledgeCardToUi(detail) : fallback;
+  const item: KnowledgeItem | undefined = detail ? mapKnowledgeCardToUi(detail) : undefined;
   const [redacted, setRedacted] = useState(true);
   const [accessReason, setAccessReason] = useState("");
   const [versionSummary, setVersionSummary] = useState("");
@@ -320,7 +314,7 @@ function KnowledgeDetail() {
               <TabsTrigger value="content">正文</TabsTrigger>
               <TabsTrigger value="versions">版本 ({versions.length || 1})</TabsTrigger>
               <TabsTrigger value="citations">引用 ({item.citations})</TabsTrigger>
-              <TabsTrigger value="discussion">讨论 (8)</TabsTrigger>
+              <TabsTrigger value="discussion">讨论 (0)</TabsTrigger>
             </TabsList>
             <TabsContent value="content" className="mt-4">
               <Card>
@@ -474,19 +468,17 @@ function KnowledgeDetail() {
             <TabsContent value="citations" className="mt-4">
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  {[
-                    "智慧能源平台-售前方案 v4.1",
-                    "国网项目客户答疑话术",
-                    "Agent 平台-方案生成提示词集",
-                  ].map((c) => (
-                    <div key={c} className="flex items-center gap-3 text-sm">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="flex-1">{c}</span>
-                      <Button variant="ghost" size="sm">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    <span className="flex-1">
+                      暂无数据库引用记录。通过 AI 问答或知识服务引用后会写入审计。
+                    </span>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to="/ai-chat">
                         <ExternalLink className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -494,27 +486,21 @@ function KnowledgeDetail() {
             <TabsContent value="discussion" className="mt-4">
               <Card>
                 <CardContent className="p-4 space-y-4">
-                  <div className="flex gap-3">
-                    <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-xs font-medium">
-                      高
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs">
-                        <b>高扬</b> · 2 天前
-                      </div>
-                      <p className="text-sm mt-1">
-                        第 3 节风险清单建议补充信创替换场景，最近几个项目都遇到了。
-                      </p>
-                    </div>
+                  <div className="text-sm text-muted-foreground">
+                    暂无数据库讨论记录。评论能力接入后会从后端评论表读取。
                   </div>
                   <Separator />
                   <div className="flex gap-2">
-                    <Textarea placeholder="发表评论或@专家…" className="min-h-[80px]" />
+                    <Textarea
+                      placeholder="评论能力尚未接入数据库，当前不可提交。"
+                      className="min-h-[80px]"
+                      disabled
+                    />
                   </div>
                   <div className="flex justify-end">
-                    <Button size="sm" onClick={() => toast.success("评论已发布")}>
+                    <Button size="sm" disabled>
                       <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                      发布
+                      待接入
                     </Button>
                   </div>
                 </CardContent>

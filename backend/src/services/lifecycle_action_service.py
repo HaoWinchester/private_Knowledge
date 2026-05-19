@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from src.models.enums import KnowledgeStatus
 from src.schemas.domain import KnowledgeItemUpdate, IntakeRequest
-from src.services.memory_store import store
+from src.services.database_store import store
 
 
 class LifecycleActionService:

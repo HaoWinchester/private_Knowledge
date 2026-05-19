@@ -16,15 +16,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { classificationColor, knowledgeItems, reviewTasks, statusColor } from "@/lib/mock-data";
+import { classificationColor, statusColor } from "@/lib/ui-models";
 import { listKnowledgeItems } from "@/lib/knowledge-api";
 import { listIntakeRequests } from "@/lib/review-api";
-import {
-  confidentialityLabels,
-  knowledgeStatusLabels,
-  mapKnowledgeCardToUi,
-  reviewGroupLabel,
-} from "@/lib/api-mappers";
+import { getOperationsSummary } from "@/lib/operations-api";
+import { confidentialityLabels, mapKnowledgeCardToUi, reviewGroupLabel } from "@/lib/api-mappers";
 import { queryKeys } from "@/lib/query-keys";
 
 export const Route = createFileRoute("/")({
@@ -34,31 +30,6 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const kpis = [
-  { label: "知识资产", value: "2,847", delta: "+42 本周", icon: Database, tint: "text-info" },
-  {
-    label: "待我审核",
-    value: "12",
-    delta: "3 高优先",
-    icon: Clock,
-    tint: "text-warning-foreground",
-  },
-  {
-    label: "本周问答",
-    value: "1,284",
-    delta: "94% 命中引用",
-    icon: Sparkles,
-    tint: "text-chart-5",
-  },
-  {
-    label: "拦截访问",
-    value: "37",
-    delta: "权限/密级",
-    icon: ShieldAlert,
-    tint: "text-destructive",
-  },
-];
-
 function Dashboard() {
   const { data: knowledgeData } = useQuery({
     queryKey: queryKeys.knowledge.list({}),
@@ -67,6 +38,10 @@ function Dashboard() {
   const { data: reviewData } = useQuery({
     queryKey: queryKeys.review.requests("all"),
     queryFn: () => listIntakeRequests(),
+  });
+  const { data: summaryData } = useQuery({
+    queryKey: queryKeys.operations.summary,
+    queryFn: getOperationsSummary,
   });
   const backendKnowledge = knowledgeData?.items.map(mapKnowledgeCardToUi) ?? [];
   const backendPending =
@@ -88,10 +63,39 @@ function Dashboard() {
           : ("部门可见" as const),
       };
     }) ?? [];
-  const pending = (backendPending.length > 0 ? backendPending : reviewTasks).slice(0, 3);
-  const trending = (backendKnowledge.length > 0 ? backendKnowledge : knowledgeItems)
-    .filter((k) => k.status === "已发布")
-    .slice(0, 4);
+  const pending = backendPending.slice(0, 3);
+  const trending = backendKnowledge.filter((k) => k.status === "已发布").slice(0, 4);
+  const highPriorityCount = backendPending.filter((item) => item.priority === "高").length;
+  const kpis = [
+    {
+      label: "知识资产",
+      value: String(summaryData?.newKnowledgeCount ?? backendKnowledge.length),
+      delta: "数据库实时统计",
+      icon: Database,
+      tint: "text-info",
+    },
+    {
+      label: "待我审核",
+      value: String(backendPending.length),
+      delta: `${highPriorityCount} 高优先`,
+      icon: Clock,
+      tint: "text-warning-foreground",
+    },
+    {
+      label: "知识复用",
+      value: String(summaryData?.reuseCount ?? 0),
+      delta: "来自运营接口",
+      icon: Sparkles,
+      tint: "text-chart-5",
+    },
+    {
+      label: "即将到期",
+      value: String(summaryData?.expiringCount ?? 0),
+      delta: "生命周期复核",
+      icon: ShieldAlert,
+      tint: "text-destructive",
+    },
+  ];
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-[1400px] mx-auto">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -178,6 +182,11 @@ function Dashboard() {
                   </Button>
                 </li>
               ))}
+              {pending.length === 0 && (
+                <li className="py-10 text-center text-sm text-muted-foreground">
+                  数据库中暂无待审核任务。
+                </li>
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -257,37 +266,42 @@ function Dashboard() {
                 </div>
               </Link>
             ))}
+            {trending.length === 0 && (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                数据库中暂无已发布知识。
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4" /> 本周专家贡献榜
+              <Users className="h-4 w-4" /> 运营薄弱领域
             </CardTitle>
-            <CardDescription>新增、审核与复用合计</CardDescription>
+            <CardDescription>来自后端运营统计接口</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {[
-              { name: "陈思远", dept: "研发", score: 142 },
-              { name: "李晓楠", dept: "售前", score: 128 },
-              { name: "高扬", dept: "交付", score: 96 },
-              { name: "林珊", dept: "HR", score: 71 },
-            ].map((u, i) => (
-              <div key={u.name} className="flex items-center gap-3">
+            {(summaryData?.weakAreas ?? []).map((area, i) => (
+              <div key={String(area.businessTheme)} className="flex items-center gap-3">
                 <div
                   className={`h-7 w-7 rounded-md flex items-center justify-center text-xs font-semibold ${i === 0 ? "bg-warning/20 text-warning-foreground" : "bg-muted"}`}
                 >
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{u.name}</div>
-                  <div className="text-xs text-muted-foreground">{u.dept}</div>
+                  <div className="text-sm font-medium">{area.businessTheme}</div>
+                  <div className="text-xs text-muted-foreground">{area.suggestedAction}</div>
                 </div>
-                <div className="text-sm font-semibold tabular-nums">{u.score}</div>
+                <div className="text-sm font-semibold tabular-nums">{area.issueCount}</div>
                 <ArrowUpRight className="h-3.5 w-3.5 text-success" />
               </div>
             ))}
+            {(summaryData?.weakAreas ?? []).length === 0 && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                暂无运营薄弱领域数据。
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

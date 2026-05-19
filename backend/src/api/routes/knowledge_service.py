@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from src.schemas.domain import KnowledgeServiceRequest, KnowledgeServiceResponse
-from src.services.memory_store import store
+from src.services.database_store import store
 from src.services.model_answer_service import enhance_knowledge_service_answer
 
 router = APIRouter(tags=["knowledge-service"])

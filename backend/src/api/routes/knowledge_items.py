@@ -14,7 +14,7 @@ from src.schemas.domain import (
     KnowledgeSubmissionCreate,
 )
 from src.services.identity_service import IdentityService
-from src.services.memory_store import store
+from src.services.database_store import store
 
 router = APIRouter(tags=["knowledge"])
 

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.api.dependencies.auth import get_bearer_token
 from src.schemas.domain import IntakeRequest, ReviewDecision, ReviewDecisionCreate
 from src.services.identity_service import IdentityService
-from src.services.memory_store import store
+from src.services.database_store import store
 
 router = APIRouter(tags=["review"])
 

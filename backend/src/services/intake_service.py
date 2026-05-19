@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.schemas.domain import IntakeRequest, KnowledgeSubmissionCreate, ReviewDecision, ReviewDecisionCreate
-from src.services.memory_store import store
+from src.services.database_store import store
 
 
 class IntakeService:

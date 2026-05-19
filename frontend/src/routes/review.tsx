@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckCircle2, ChevronRight, Filter, XCircle, RefreshCcw, ArrowLeft } from "lucide-react";
@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { classificationColor, reviewTasks } from "@/lib/mock-data";
+import { classificationColor, type ReviewTask } from "@/lib/ui-models";
 import { listKnowledgeItems } from "@/lib/knowledge-api";
 import { listIntakeRequests, reviewIntakeRequest } from "@/lib/review-api";
 import { confidentialityLabels, reviewGroupLabel } from "@/lib/api-mappers";
@@ -38,29 +38,31 @@ function ReviewPage() {
     queryKey: queryKeys.knowledge.list({}),
     queryFn: () => listKnowledgeItems(),
   });
-  const backendTasks =
-    requestsData?.items.map((request) => {
-      const item = knowledgeData?.items.find(
-        (knowledge) => knowledge.id === request.knowledgeItemId,
-      );
-      const classification = item
-        ? confidentialityLabels[item.confidentialityLevel]
-        : ("部门可见" as const);
-      return {
-        id: request.id,
-        knowledgeId: request.knowledgeItemId,
-        title: item?.title ?? request.knowledgeItemId,
-        submitter: "后端提交",
-        submittedAt: new Date(request.createdAt).toLocaleString("zh-CN"),
-        reviewer: "你",
-        priority: request.reviewGroup === "security_admin" ? "高" : "中",
-        classification,
-        reviewType: reviewGroupLabel(request.reviewGroup),
-        reason: request.status === "precheck_flagged" ? "预检查需复核" : undefined,
-        status: request.status,
-      };
-    }) ?? [];
-  const tasks = backendTasks.length > 0 ? backendTasks : reviewTasks;
+  const tasks: ReviewTask[] = useMemo(
+    () =>
+      requestsData?.items.map((request) => {
+        const item = knowledgeData?.items.find(
+          (knowledge) => knowledge.id === request.knowledgeItemId,
+        );
+        const classification = item
+          ? confidentialityLabels[item.confidentialityLevel]
+          : ("部门可见" as const);
+        return {
+          id: request.id,
+          knowledgeId: request.knowledgeItemId,
+          title: item?.title ?? request.knowledgeItemId,
+          submitter: "后端提交",
+          submittedAt: new Date(request.createdAt).toLocaleString("zh-CN"),
+          reviewer: "你",
+          priority: request.reviewGroup === "security_admin" ? "高" : "中",
+          classification,
+          reviewType: reviewGroupLabel(request.reviewGroup),
+          reason: request.status === "precheck_flagged" ? "预检查需复核" : undefined,
+          status: request.status,
+        };
+      }) ?? [],
+    [knowledgeData?.items, requestsData?.items],
+  );
   const [selected, setSelected] = useState(tasks[0]?.id ?? "");
   useEffect(() => {
     if (!tasks.find((item) => item.id === selected)) {

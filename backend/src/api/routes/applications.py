@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from src.schemas.domain import ApplicationKeyRotationResponse, ApplicationSummary
-from src.services.memory_store import store
+from src.services.database_store import store
 
 router = APIRouter(tags=["applications"])
 

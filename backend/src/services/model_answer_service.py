@@ -3,7 +3,7 @@ from __future__ import annotations
 from src.core.settings import get_settings
 from src.integrations.model_gateway import ModelGateway, ModelGatewayError
 from src.schemas.domain import Citation, KnowledgeServiceResponse, QARequest, QAResponse
-from src.services.memory_store import store
+from src.services.database_store import store
 
 
 def _context_from_citations(citations: list[Citation]) -> str:

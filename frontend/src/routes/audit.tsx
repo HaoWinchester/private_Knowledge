@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { auditEvents } from "@/lib/mock-data";
 import { listAuditEvents } from "@/lib/audit-api";
 import { auditEventTypeLabels, auditResultLabels } from "@/lib/api-mappers";
 import { queryKeys } from "@/lib/query-keys";
@@ -46,7 +45,7 @@ function Audit() {
       target: event.knowledgeItemId ?? event.applicationId ?? "-",
       context: event.operationContext ?? event.reason ?? `留存至 ${event.retentionUntil}`,
       result: auditResultLabels[event.result],
-    })) ?? auditEvents;
+    })) ?? [];
   const filtered = sourceEvents.filter((event) => {
     const matchesText = q
       ? `${event.actor}${event.target}${event.context}${event.action}`.includes(q)
@@ -137,6 +136,13 @@ function Audit() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-10 text-center text-sm text-muted-foreground">
+                    数据库中暂无匹配的审计事件。
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

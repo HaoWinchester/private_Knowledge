@@ -9,7 +9,7 @@ import type {
   KnowledgeType,
   SourceType,
 } from "./api-types";
-import type { Classification, KnowledgeItem } from "./mock-data";
+import type { Classification, KnowledgeItem } from "./ui-models";
 
 export const confidentialityLabels: Record<ConfidentialityLevel, string> = {
   internal_public: "公开内部",

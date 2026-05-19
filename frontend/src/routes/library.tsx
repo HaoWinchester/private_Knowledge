@@ -24,7 +24,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { classificationColor, knowledgeItems, statusColor } from "@/lib/mock-data";
+import { classificationColor, statusColor } from "@/lib/ui-models";
 import { listKnowledgeItems } from "@/lib/knowledge-api";
 import { confidentialityValues, mapKnowledgeCardToUi } from "@/lib/api-mappers";
 import { queryKeys } from "@/lib/query-keys";
@@ -54,7 +54,7 @@ function Library() {
           classification === "全部密级" ? undefined : confidentialityValues[classification],
       }),
   });
-  const sourceItems = data?.items.map(mapKnowledgeCardToUi) ?? knowledgeItems;
+  const sourceItems = data?.items.map(mapKnowledgeCardToUi) ?? [];
 
   const filtered = sourceItems.filter((k) => {
     if (domain !== "全部" && k.domain !== domain) return false;
@@ -236,6 +236,13 @@ function Library() {
               </Card>
             </Link>
           ))}
+          {filtered.length === 0 && (
+            <Card className="md:col-span-2 xl:col-span-3">
+              <div className="p-10 text-center text-sm text-muted-foreground">
+                数据库中没有匹配的知识条目。
+              </div>
+            </Card>
+          )}
         </div>
       ) : (
         <Card>
@@ -266,6 +273,11 @@ function Library() {
                 </Link>
               </li>
             ))}
+            {filtered.length === 0 && (
+              <li className="p-10 text-center text-sm text-muted-foreground">
+                数据库中没有匹配的知识条目。
+              </li>
+            )}
           </ul>
         </Card>
       )}
