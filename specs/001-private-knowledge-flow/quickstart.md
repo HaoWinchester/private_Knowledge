@@ -129,3 +129,31 @@ The first-phase plan is validated when the system can demonstrate:
 - sensitive and strictly controlled knowledge behavior
 - audit record retention metadata
 - one governed upper-level AI service call path
+
+## Validation Record
+
+Last local validation: 2026-05-19.
+
+```bash
+cd backend
+python3 -m pytest tests/contract
+# 21 passed
+
+python3 -m pytest tests/integration
+# 16 passed
+
+python3 -m pytest
+# 41 passed
+
+cd ../../puhua_KnowledgeUI
+npm run lint
+# 0 errors, 6 existing Fast Refresh warnings from shared UI component exports
+
+PATH=/Users/menghao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH npm run build
+# client and SSR builds passed
+
+PATH=/Users/menghao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH PLAYWRIGHT_BASE_URL=http://127.0.0.1:3005 npm run test:e2e
+# 5 passed
+```
+
+Completion signal: backend contracts, integration flows, frontend lint/build, and frontend journey tests all passed against the local in-memory pilot backend and existing `puhua_KnowledgeUI` frontend.

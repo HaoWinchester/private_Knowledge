@@ -6,6 +6,12 @@ import httpx
 import pytest
 
 from src.main import create_app
+from src.services.memory_store import store
+
+
+@pytest.fixture(autouse=True)
+def reset_memory_store() -> None:
+    store.reset()
 
 
 @pytest.fixture

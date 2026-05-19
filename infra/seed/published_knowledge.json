@@ -1,0 +1,16 @@
+[
+  {
+    "id": "K-2026-0142",
+    "title": "央企集团客户售前调研框架 v3.2",
+    "confidentialityLevel": "project_visible",
+    "status": "published",
+    "tags": ["售前", "央企", "调研模板", "合规"]
+  },
+  {
+    "id": "K-2026-0138",
+    "title": "数据中台微服务部署最佳实践",
+    "confidentialityLevel": "department_visible",
+    "status": "published",
+    "tags": ["K8s", "微服务", "部署"]
+  }
+]

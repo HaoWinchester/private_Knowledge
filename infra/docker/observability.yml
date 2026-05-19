@@ -1,0 +1,17 @@
+groups:
+  - name: enterprise-knowledge-dev
+    rules:
+      - alert: BackendUnavailable
+        expr: up{job="enterprise-knowledge-backend"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "知识库后端不可用"
+      - alert: SearchLatencyHigh
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{route="/search"}[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "检索接口 P95 超过 3 秒"

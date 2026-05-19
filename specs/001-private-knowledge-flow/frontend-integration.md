@@ -126,3 +126,15 @@ Submit payloads MUST send this as `source.sourceType`.
 - Always include citation IDs, version numbers, scope, and audit event IDs in QA/service responses because the UI already displays these concepts.
 - Provide `GET /operations/summary` for the operations page, and `GET /applications`, `POST /applications/{applicationId}/keys/rotate`, `GET /application-policies`, and `PATCH /application-policies` for the integrations page.
 - Provide `POST /business-action-bindings` so project review, presales archive, delivery review, and recruitment evaluation scenarios can be wired as knowledge intake triggers instead of being treated as ordinary manual submissions.
+
+## Implemented Frontend Wiring
+
+- `/submit` posts `KnowledgeSubmissionCreate` to `POST /knowledge-items`.
+- `/review` reads `GET /intake-requests` and posts review decisions to `POST /intake-requests/{id}/review`.
+- `/library` reads `GET /knowledge-items` with keyword, status, and confidentiality filters.
+- `/library/$id` reads `GET /knowledge-items/{id}`, renders backend versions, posts new versions, quality signals, and strict access requests.
+- `/ai-chat` posts to `/qa`, or to `/api/v1/knowledge/query` when `VITE_USE_GOVERNED_SERVICE=true`, and renders citations plus strict-control blocked states.
+- `/access` reads and mutates authorization requests through `/authorization-requests`.
+- `/audit` reads `/audit-events` and maps backend audit event/result labels to the UI.
+- `/operations` reads `/operations/summary` and records lifecycle review actions through quality signals.
+- `/integrations` reads pilot applications and application policies, and rotates keys through backend mutations.

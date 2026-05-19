@@ -1,0 +1,16 @@
+[
+  {
+    "id": "REV-SEED-001",
+    "knowledgeItemId": "K-SEED-001",
+    "requestType": "create",
+    "status": "submitted",
+    "reviewGroup": "knowledge_admin"
+  },
+  {
+    "id": "REV-SEED-002",
+    "knowledgeItemId": "K-SEED-STRICT",
+    "requestType": "create",
+    "status": "precheck_flagged",
+    "reviewGroup": "security_admin"
+  }
+]

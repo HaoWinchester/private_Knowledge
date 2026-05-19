@@ -1,0 +1,18 @@
+[
+  {
+    "id": "AUD-SEED-SVC-001",
+    "eventType": "service_call",
+    "applicationId": "pilot-agent",
+    "knowledgeItemId": "K-2026-0142",
+    "result": "success",
+    "operationContext": "方案生成"
+  },
+  {
+    "id": "AUD-SEED-SVC-002",
+    "eventType": "access_denied",
+    "applicationId": "pilot-agent",
+    "knowledgeItemId": "K-2026-0156",
+    "result": "denied",
+    "reason": "strict_control_requires_approval"
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "title": "AI 产品经理岗位面试评估框架",
+    "knowledgeType": "form",
+    "source": {"sourceType": "form", "displayName": "招聘评估表"},
+    "responsibleUserId": "user-knowledge-admin",
+    "roleDirection": "HR",
+    "businessTheme": "面试评估",
+    "confidentialityLevel": "department_visible",
+    "summary": "AI 产品经理候选人评估维度、追问清单和典型反例。",
+    "suggestedTags": ["招聘", "AI产品", "面试"],
+    "applicableScope": "HR、面试官",
+    "validUntil": "2027-05-18"
+  }
+]
