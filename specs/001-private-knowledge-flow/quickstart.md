@@ -24,8 +24,13 @@ export OPENSEARCH_URL="http://localhost:9200"
 export QDRANT_URL="http://localhost:6333"
 export IDENTITY_MODE="stub"
 export MODEL_GATEWAY_URL="http://localhost:8088"
+export MODEL_PROVIDER="stub"
+export ZHIPU_API_KEY=""
+export ZHIPU_MODEL="glm-4.5-flash"
 export CORS_ALLOWED_ORIGINS="http://localhost:3004"
 ```
+
+Set `MODEL_PROVIDER=zhipu` and provide `ZHIPU_API_KEY` only in local ignored environment files or deployment secret storage. The local pilot defaults to `glm-4.5-flash` because it passed live smoke testing with the current key; higher-tier models can be selected after quota and rate limits are confirmed.
 
 ## Planned Local Services
 
@@ -143,7 +148,7 @@ python3 -m pytest tests/integration
 # 16 passed
 
 python3 -m pytest
-# 41 passed
+# 47 passed
 
 cd ../frontend
 npm run lint
@@ -152,8 +157,13 @@ npm run lint
 PATH=/Users/menghao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH npm run build
 # client and SSR builds passed
 
-PATH=/Users/menghao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH PLAYWRIGHT_BASE_URL=http://127.0.0.1:3005 npm run test:e2e
+PATH=/Users/menghao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH PLAYWRIGHT_BASE_URL=http://127.0.0.1:3006 npm run test:e2e
 # 5 passed
+
+MODEL_PROVIDER=zhipu ZHIPU_MODEL=glm-4.5-flash ZHIPU_API_KEY=<local-secret> python3 - <<'PY'
+# POST /qa through ASGITransport and confirm status 200, model-generated answer, and citations.
+PY
+# passed against Zhipu chat completions; glm-5.1 returned 429 for the current key/quota.
 ```
 
-Completion signal: backend contracts, integration flows, frontend lint/build, and frontend journey tests all passed against the local in-memory pilot backend and co-located `frontend/` app.
+Completion signal: backend contracts, integration flows, frontend lint/build, frontend journey tests, and a live Zhipu-backed QA smoke test all passed against the local in-memory pilot backend and co-located `frontend/` app.

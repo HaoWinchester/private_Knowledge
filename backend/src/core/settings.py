@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,11 +28,16 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     identity_mode: str = "stub"
     model_gateway_url: str = "http://localhost:8088"
-    cors_allowed_origins: list[str] = Field(
+    model_provider: str = "stub"
+    model_gateway_timeout_seconds: float = 30.0
+    zhipu_api_key: SecretStr | None = None
+    zhipu_base_url: str = "https://open.bigmodel.cn/api/paas/v4"
+    zhipu_model: str = "glm-4.5-flash"
+    cors_allowed_origins: str | list[str] = Field(
         default_factory=lambda: ["http://localhost:3004", "http://localhost:5173"]
     )
 
-    @field_validator("cors_allowed_origins", mode="before")
+    @field_validator("cors_allowed_origins", mode="after")
     @classmethod
     def split_origins(cls, value: str | list[str]) -> list[str]:
         if isinstance(value, str):
