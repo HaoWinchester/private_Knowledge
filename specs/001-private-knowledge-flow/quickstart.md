@@ -53,11 +53,11 @@ Health check:
 curl http://localhost:8001/health
 ```
 
-## Existing Frontend
+## Frontend
 
 ```bash
-cd ../puhua_KnowledgeUI
-npm install
+cd frontend
+npm install --legacy-peer-deps --package-lock=false
 npm run lint
 cp .env.example .env.local
 npm run dev -- --host 0.0.0.0 --port 3004
@@ -69,7 +69,7 @@ Open:
 http://localhost:3004
 ```
 
-The frontend repository is `https://github.com/HaoWinchester/puhua_KnowledgeUI.git`. It already contains the user and admin pages for the pilot. Backend implementation should replace its current `src/lib/mock-data.ts` usage through API clients and mappers rather than creating a new frontend.
+The frontend now lives in this repository under `frontend/`. It contains the user and admin pages for the pilot and should be committed together with backend changes in `HaoWinchester/private_Knowledge.git`.
 
 ## Contract Validation
 
@@ -145,7 +145,7 @@ python3 -m pytest tests/integration
 python3 -m pytest
 # 41 passed
 
-cd ../../puhua_KnowledgeUI
+cd ../frontend
 npm run lint
 # 0 errors, 6 existing Fast Refresh warnings from shared UI component exports
 
@@ -156,4 +156,4 @@ PATH=/Users/menghao/.cache/codex-runtimes/codex-primary-runtime/dependencies/nod
 # 5 passed
 ```
 
-Completion signal: backend contracts, integration flows, frontend lint/build, and frontend journey tests all passed against the local in-memory pilot backend and existing `puhua_KnowledgeUI` frontend.
+Completion signal: backend contracts, integration flows, frontend lint/build, and frontend journey tests all passed against the local in-memory pilot backend and co-located `frontend/` app.

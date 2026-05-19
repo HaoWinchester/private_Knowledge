@@ -4,7 +4,7 @@
 
 1. Start dependencies with `docker compose -f infra/docker/docker-compose.dev.yml up -d`.
 2. Start backend with `uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload`.
-3. Start frontend in `../puhua_KnowledgeUI` with `npm run dev -- --host 0.0.0.0 --port 3004`.
+3. Start frontend in `frontend/` with `npm run dev -- --host 0.0.0.0 --port 3004`.
 
 ## Backups
 

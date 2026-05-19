@@ -11,13 +11,13 @@
 
 ## Decision: FastAPI backend with existing TanStack Start frontend
 
-**Rationale**: The user provided an existing frontend repository, `HaoWinchester/puhua_KnowledgeUI`, with completed internal portal pages for dashboard, library, submission, review, access approval, audit, AI chat, operations, and integrations. FastAPI still fits strong schema validation, OpenAPI contracts, async workers, and RAG orchestration. The backend should integrate with the existing TanStack Start/Vite/React frontend by replacing mock data with API clients and field mappers.
+**Rationale**: The user provided an existing frontend implementation with completed internal portal pages for dashboard, library, submission, review, access approval, audit, AI chat, operations, and integrations. It now lives under `frontend/` in this repository. FastAPI still fits strong schema validation, OpenAPI contracts, async workers, and RAG orchestration. The backend should integrate with the TanStack Start/Vite/React frontend by replacing mock data with API clients and field mappers.
 
 **Alternatives considered**:
 
 - Java Spring stack: strong enterprise fit, but not aligned with the existing local agent profile.
 - Low-code workflow platform first: useful later, but less flexible for permission-filtered RAG and custom audit requirements.
-- New frontend scaffold: rejected because the existing `puhua_KnowledgeUI` repository already contains the required first-phase workflows and validation screens.
+- New frontend scaffold: rejected because the existing frontend implementation already contains the required first-phase workflows and validation screens.
 
 ## Decision: PostgreSQL as the operational source of truth
 

@@ -6,7 +6,7 @@
 
 ## Summary
 
-建设一个私有化企业知识中台，先交付知识提交、人工审核、分类定密、版本追踪、权限过滤、检索问答、引用溯源、审计留痕和 1 个上层 AI 应用试点调用闭环。技术路线采用前后端分离 Web 应用：FastAPI 承载业务 API、权限/工作流/审计/RAG 编排；现有前端仓库 `HaoWinchester/puhua_KnowledgeUI` 承载员工端与管理员端页面；PostgreSQL 管元数据和流程状态；对象存储保存原文；OpenSearch 和 Qdrant 分别支撑关键词/全文检索与语义检索；Celery/Redis 处理文档解析、索引、脱敏、过期复核和质量运营任务。
+建设一个私有化企业知识中台，先交付知识提交、人工审核、分类定密、版本追踪、权限过滤、检索问答、引用溯源、审计留痕和 1 个上层 AI 应用试点调用闭环。技术路线采用前后端分离 Web 应用：FastAPI 承载业务 API、权限/工作流/审计/RAG 编排；`frontend/` 承载员工端与管理员端页面；PostgreSQL 管元数据和流程状态；对象存储保存原文；OpenSearch 和 Qdrant 分别支撑关键词/全文检索与语义检索；Celery/Redis 处理文档解析、索引、脱敏、过期复核和质量运营任务。
 
 ## Technical Context
 
@@ -16,11 +16,11 @@
 
 **Storage**: PostgreSQL for metadata/workflow/audit/RBAC; S3-compatible object storage such as MinIO for source files and derived artifacts; OpenSearch for full-text retrieval; Qdrant for vector retrieval; Redis for async coordination and short-lived caches
 
-**Testing**: pytest for backend unit/integration/contract tests; frontend smoke/journey validation against `../puhua_KnowledgeUI` once API integration replaces mock data; OpenAPI schema validation for API contracts
+**Testing**: pytest for backend unit/integration/contract tests; frontend smoke/journey validation against `frontend` once API integration replaces mock data; OpenAPI schema validation for API contracts
 
 **Target Platform**: Private Linux server or internal container environment; browser-based internal web client; controlled network deployment
 
-**Project Type**: Web application with backend API, async workers, an existing external frontend admin/user portal, and integration contracts
+**Project Type**: Web application with backend API, async workers, a co-located frontend admin/user portal, and integration contracts
 
 **Performance Goals**: Search and filtered list results should return within 3 seconds for pilot datasets; QA responses should stream or return first useful response within 10 seconds when retrieval succeeds; permission denial and metadata-only restricted results should return within 1 second; async indexing should complete within 15 minutes for typical pilot document batches
 
@@ -80,10 +80,10 @@ infra/
 └── seed/
 ```
 
-### Existing Frontend Repository
+### Frontend Application
 
 ```text
-../puhua_KnowledgeUI/
+frontend/
 ├── src/
 │   ├── routes/
 │   │   ├── index.tsx
@@ -103,7 +103,7 @@ infra/
 └── vite.config.ts
 ```
 
-**Structure Decision**: Use the existing `HaoWinchester/puhua_KnowledgeUI` repository as the frontend instead of scaffolding a new frontend under this repository. Backend implementation must align with the existing UI routes and replace `src/lib/mock-data.ts` usage through API clients, React Query hooks, and field mappers in the frontend repo. `tasks.md` should create backend/infra files in this repository and frontend integration files under `../puhua_KnowledgeUI/` only where needed.
+**Structure Decision**: Keep the frontend application inside this repository under `frontend/`. Backend implementation must align with the existing UI routes and replace `src/lib/mock-data.ts` usage through API clients, React Query hooks, and field mappers in the co-located frontend app.
 
 ## Phase 0: Research Summary
 
@@ -111,7 +111,7 @@ Research output is captured in [research.md](./research.md). All planning unknow
 
 Key decisions:
 
-- Use FastAPI backend plus the existing `puhua_KnowledgeUI` TanStack Start frontend rather than a document-only, script-only, or newly scaffolded frontend system.
+- Use FastAPI backend plus the co-located TanStack Start frontend rather than a document-only, script-only, or newly scaffolded frontend system.
 - Use PostgreSQL as the source of truth for metadata, lifecycle, workflow, authorization rules, audit records, and service-call logs.
 - Use object storage for original and derived files, plus OpenSearch and Qdrant for separate lexical and semantic retrieval paths.
 - Implement local authorization rules on top of unified identity: identity supplies user/department/role, while the knowledge base owns project authorization, confidentiality authorization, and exceptions.

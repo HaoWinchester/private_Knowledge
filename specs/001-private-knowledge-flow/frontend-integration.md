@@ -1,29 +1,29 @@
-# Frontend Integration: puhua_KnowledgeUI
+# Frontend Integration: frontend/
 
-## Source Repository
+## Source Location
 
-- GitHub: `https://github.com/HaoWinchester/puhua_KnowledgeUI.git`
-- Local sibling path used for inspection: `/Users/menghao/Documents/幻谱/普华科技/puhua_KnowledgeUI`
+- Repository: `https://github.com/HaoWinchester/private_Knowledge.git`
+- Local path: `/Users/menghao/Documents/幻谱/普华科技/企业内部知识库/frontend`
 - Frontend stack: TanStack Start, TanStack Router, Vite, React 19, React Query, Tailwind CSS, shadcn/Radix UI, lucide-react, sonner
 
 ## Integration Principle
 
-The backend must integrate with this existing UI instead of creating a new frontend. The current UI is a complete prototype that reads from `src/lib/mock-data.ts`; implementation should add API clients, field mappers, React Query hooks, and route-level mutations/queries while preserving the existing page layout and interaction model.
+The backend must integrate with this co-located UI instead of creating another frontend. The UI started as a complete prototype that read from `src/lib/mock-data.ts`; implementation adds API clients, field mappers, React Query hooks, and route-level mutations/queries while preserving the existing page layout and interaction model.
 
 ## Existing UI Routes
 
 | UI route | Current file | Backend capability to connect |
 | --- | --- | --- |
-| `/` | `../puhua_KnowledgeUI/src/routes/index.tsx` | dashboard KPIs, pending reviews, trending knowledge |
-| `/library` | `../puhua_KnowledgeUI/src/routes/library.tsx` | permission-filtered knowledge list and filters |
-| `/library/$id` | `../puhua_KnowledgeUI/src/routes/library.$id.tsx` | knowledge detail, versions, restricted metadata, quality actions |
-| `/submit` | `../puhua_KnowledgeUI/src/routes/submit.tsx` | create knowledge submission and submit new version |
-| `/review` | `../puhua_KnowledgeUI/src/routes/review.tsx` | intake request queue and review decisions |
-| `/access` | `../puhua_KnowledgeUI/src/routes/access.tsx` | authorization request creation and approval |
-| `/audit` | `../puhua_KnowledgeUI/src/routes/audit.tsx` | audit event query and export |
-| `/ai-chat` | `../puhua_KnowledgeUI/src/routes/ai-chat.tsx` | QA with citations and strict-control blocked responses |
-| `/operations` | `../puhua_KnowledgeUI/src/routes/operations.tsx` | quality/lifecycle operations dashboard |
-| `/integrations` | `../puhua_KnowledgeUI/src/routes/integrations.tsx` | governed knowledge service endpoint, pilot apps, keys, call metrics |
+| `/` | `frontend/src/routes/index.tsx` | dashboard KPIs, pending reviews, trending knowledge |
+| `/library` | `frontend/src/routes/library.tsx` | permission-filtered knowledge list and filters |
+| `/library/$id` | `frontend/src/routes/library.$id.tsx` | knowledge detail, versions, restricted metadata, quality actions |
+| `/submit` | `frontend/src/routes/submit.tsx` | create knowledge submission and submit new version |
+| `/review` | `frontend/src/routes/review.tsx` | intake request queue and review decisions |
+| `/access` | `frontend/src/routes/access.tsx` | authorization request creation and approval |
+| `/audit` | `frontend/src/routes/audit.tsx` | audit event query and export |
+| `/ai-chat` | `frontend/src/routes/ai-chat.tsx` | QA with citations and strict-control blocked responses |
+| `/operations` | `frontend/src/routes/operations.tsx` | quality/lifecycle operations dashboard |
+| `/integrations` | `frontend/src/routes/integrations.tsx` | governed knowledge service endpoint, pilot apps, keys, call metrics |
 
 ## Field Mapping
 
@@ -102,19 +102,19 @@ Submit payloads MUST send this as `source.sourceType`.
 
 ## Frontend Integration Files To Add
 
-- `../puhua_KnowledgeUI/.env.example`: API base URL and mode flags
-- `../puhua_KnowledgeUI/src/lib/api-config.ts`: API base URL resolution
-- `../puhua_KnowledgeUI/src/lib/api-client.ts`: fetch wrapper with bearer token and JSON error handling
-- `../puhua_KnowledgeUI/src/lib/api-types.ts`: TypeScript API DTOs mirroring OpenAPI schemas
-- `../puhua_KnowledgeUI/src/lib/api-mappers.ts`: DTO-to-UI label mappers
-- `../puhua_KnowledgeUI/src/lib/query-keys.ts`: React Query key factory
-- `../puhua_KnowledgeUI/src/lib/knowledge-api.ts`: knowledge list/detail/submission/version API calls
-- `../puhua_KnowledgeUI/src/lib/review-api.ts`: intake request and review API calls
-- `../puhua_KnowledgeUI/src/lib/access-api.ts`: authorization request API calls
-- `../puhua_KnowledgeUI/src/lib/audit-api.ts`: audit query API calls
-- `../puhua_KnowledgeUI/src/lib/qa-api.ts`: QA API calls
-- `../puhua_KnowledgeUI/src/lib/operations-api.ts`: quality and operations API calls
-- `../puhua_KnowledgeUI/src/lib/integrations-api.ts`: governed knowledge service and pilot application API calls
+- `frontend/.env.example`: API base URL and mode flags
+- `frontend/src/lib/api-config.ts`: API base URL resolution
+- `frontend/src/lib/api-client.ts`: fetch wrapper with bearer token and JSON error handling
+- `frontend/src/lib/api-types.ts`: TypeScript API DTOs mirroring OpenAPI schemas
+- `frontend/src/lib/api-mappers.ts`: DTO-to-UI label mappers
+- `frontend/src/lib/query-keys.ts`: React Query key factory
+- `frontend/src/lib/knowledge-api.ts`: knowledge list/detail/submission/version API calls
+- `frontend/src/lib/review-api.ts`: intake request and review API calls
+- `frontend/src/lib/access-api.ts`: authorization request API calls
+- `frontend/src/lib/audit-api.ts`: audit query API calls
+- `frontend/src/lib/qa-api.ts`: QA API calls
+- `frontend/src/lib/operations-api.ts`: quality and operations API calls
+- `frontend/src/lib/integrations-api.ts`: governed knowledge service and pilot application API calls
 
 ## Backend Alignment Notes
 
