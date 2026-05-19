@@ -1,200 +1,227 @@
-# Feature Specification: Private Knowledge Flow System
+# Feature Specification: 企业内部知识库与受控流转体系
 
-**Feature Branch**: `001-private-knowledge-flow`  
-**Created**: 2026-05-18  
-**Status**: Draft  
-**Input**: Requirements analyzed from `/Users/menghao/Documents/幻谱/普华科技/企业内部知识库/私有化知识库与流转体系可行性及落地方案.docx`
+**Feature Branch**: `001-private-knowledge-flow`
 
-## User Scenarios & Testing
+**Created**: 2026-05-18
 
-### User Story 1 - Submit and Govern Knowledge (Priority: P1)
+**Status**: Draft
 
-As an employee producing project, sales, consulting, delivery, development, or HR materials, I need a controlled way to submit process knowledge into a shared enterprise knowledge base so that valuable experience is preserved beyond individual files, chats, and project folders.
+**Input**: User description: "根据 `/Users/menghao/Documents/幻谱/普华科技/企业内部知识库/私有化知识库与流转体系可行性及落地方案.docx` 分析企业内部知识库与流转体系需求。"
 
-**Why this priority**: Without a reliable intake and governance loop, later search, reuse, audit, and AI-assisted usage cannot be trusted.
+## Clarifications
 
-**Independent Test**: A user can submit a knowledge item with required metadata, route it through review, publish it after approval, and see a versioned knowledge card with source information.
+### Session 2026-05-18
+
+- Q: 权限来源应如何划分？ → A: 接入统一身份获取用户、部门、角色；知识条目的项目授权、密级授权、例外授权由知识库本地管理。
+- Q: 敏感和严格受控知识应如何进入问答和上层 AI 调用？ → A: 敏感知识可在授权后脱敏用于问答；严格受控知识默认只返回元数据和授权申请入口，显式审批后才可使用脱敏片段。
+- Q: 一期外部资料接入边界是什么？ → A: 一期支持人工上传、链接引用、共享目录和项目样例的只读接入，所有入库都必须经过人工审核确认。
+- Q: 审计记录和历史版本应保留多久？ → A: 审计记录、审批记录、访问记录、调用记录至少保留 3 年；历史版本在知识归档或下架后至少保留 3 年。
+- Q: 一期上层 AI 应用接入深度是什么？ → A: 一期提供受控知识服务接口，并选择 1 个试点调用场景验证权限过滤、引用溯源和调用审计。
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - 知识提交与受控入库 (Priority: P1)
+
+作为销售、咨询、业务、开发、交付、测试、运维或 HR 员工，我希望将调研笔记、客户沟通记录、方案文档、需求文档、代码实践、项目复盘、面试记录等过程资料通过统一入口提交，并经过审核、分类、定密、版本登记后沉淀为组织级知识资产，避免知识停留在个人电脑、群聊、网盘或局部项目目录中。
+
+**Why this priority**: 知识入库、审核、分类、版本和责任人是后续检索复用、权限审计、质量运营和 AI 应用可信引用的基础闭环。
+
+**Independent Test**: 只实现该故事时，用户能够提交一条知识，补齐必填元数据，触发审核，审核通过后形成可追溯、可版本化的知识卡片。
 
 **Acceptance Scenarios**:
 
-1. **Given** an employee has a reusable document, note, code practice, interview record, or project review, **When** they submit it for intake, **Then** the system requires source, role direction, customer or project context, confidentiality level, summary, and suggested tags.
-2. **Given** a submitted item is low quality or potentially sensitive, **When** intake checks are completed, **Then** the item is routed to manual review before publication.
-3. **Given** a domain expert or knowledge administrator reviews an item, **When** they approve or reject it, **Then** the decision, reviewer, reason, timestamp, and resulting status are recorded.
-4. **Given** a published item is edited, **When** the new version is submitted, **Then** the system preserves the previous version, records the change description, and exposes only the latest effective version by default.
+1. **Given** 员工准备提交一份可复用资料，**When** 员工发起入库申请，**Then** 系统要求填写来源、提交人、责任人、岗位方向、客户或项目、业务主题、密级、摘要、建议标签、适用范围和有效期。
+2. **Given** 入库资料质量较低、疑似重复或疑似包含敏感内容，**When** 系统完成入库预检查，**Then** 资料进入人工复核或安全复核，不得直接发布。
+3. **Given** 知识管理员、领域专家或安全管理员收到审核任务，**When** 审核人审批通过、驳回或要求整改，**Then** 系统记录审核人、审核结论、原因、时间和后续状态。
+4. **Given** 已发布知识需要更新，**When** 责任人提交新版本，**Then** 系统保留历史版本和变更说明，并默认向普通使用者展示最新生效版本。
 
 ---
 
-### User Story 2 - Find and Reuse Trusted Knowledge (Priority: P1)
+### User Story 2 - 可信检索、问答与复用 (Priority: P1)
 
-As a business user, consultant, developer, delivery member, or HR user, I need to find reusable knowledge by multiple business dimensions and ask questions within my permission scope so that I can reuse high-quality material quickly and safely.
+作为业务人员、售前顾问、交付人员、开发人员或 HR 用户，我希望按岗位、行业客户、业务主题、项目阶段、技术栈、密级、生命周期等维度检索知识，并在授权范围内进行语义问答、模板复用和相似案例推荐，从而减少重复查找和重复编写。
 
-**Why this priority**: The main business value is reducing repeated search and rewriting while making reused knowledge traceable.
+**Why this priority**: 项目的核心业务价值是让员工能更快找到、用到、追溯到高质量知识，并提升售前、交付、研发和 HR 场景的复用效率。
 
-**Independent Test**: A permitted user can search and ask a question using business filters, receive relevant knowledge results or answers, and verify each result's source, version, applicable scope, and confidentiality constraints.
+**Independent Test**: 只实现该故事时，授权用户能够按多维度筛选知识、提出问题、获得带引用来源的回答，并识别知识版本、适用范围和当前有效状态。
 
 **Acceptance Scenarios**:
 
-1. **Given** a user searches for knowledge, **When** they filter by role, business theme, industry, customer type, project stage, technology topic, confidentiality level, or lifecycle state, **Then** the result list reflects the selected dimensions.
-2. **Given** a user asks a question, **When** relevant authorized knowledge exists, **Then** the answer includes cited source items, version identifiers, applicable scope, and enough context for human review.
-3. **Given** a user views a current project, customer need, or document context, **When** similar reusable knowledge exists, **Then** the system recommends related cases, templates, and lessons learned.
-4. **Given** a knowledge item has expired, been superseded, or been removed, **When** a user searches or asks a question, **Then** it is not presented as a current formal reuse candidate.
+1. **Given** 用户需要查找知识，**When** 用户按关键词、标签、岗位方向、业务主题、客户行业、项目阶段、技术栈或密级筛选，**Then** 系统返回符合筛选条件且用户有权访问的知识结果。
+2. **Given** 用户提出业务问题，**When** 授权范围内存在相关知识片段，**Then** 系统生成回答并展示引用来源、版本号、适用范围和复核提示。
+3. **Given** 用户正在处理项目、客户需求或文档内容，**When** 系统识别到相似知识、案例、模板或历史经验，**Then** 系统向用户推荐可复用材料。
+4. **Given** 某条知识已过期、已下架、被新版本替代或被驳回，**When** 用户检索或问答，**Then** 系统不得将其作为当前正式复用材料展示。
 
 ---
 
-### User Story 3 - Enforce Permission, Confidentiality, and Audit (Priority: P1)
+### User Story 3 - 权限、密级、脱敏与审计 (Priority: P1)
 
-As a security administrator or compliance reviewer, I need confidentiality classification, authorization control, desensitization, and audit trails across intake, search, answer generation, and external knowledge usage so that sensitive customer, contract, code, pricing, and personnel information is protected.
+作为安全管理员、合规审计人员或项目负责人，我希望系统对客户资料、合同条款、源代码、报价信息、敏感人员信息等内容执行密级分类、角色授权、项目授权、脱敏和访问审计，确保知识复用和 AI 调用均在安全边界内发生。
 
-**Why this priority**: The target environment requires private deployment, internal network control, and traceable access for sensitive enterprise knowledge.
+**Why this priority**: 面向央国企客户和内部私有化部署场景，数据不出域、权限可控、过程可审计是上线前置条件。
 
-**Independent Test**: A user without authorization cannot discover, access, cite, export, or use restricted knowledge, while administrators can inspect access and usage records.
+**Independent Test**: 未授权用户无法发现、查看、引用、导出或通过上层应用调用受限知识；管理员能够追踪相关访问和调用记录。
 
 **Acceptance Scenarios**:
 
-1. **Given** a knowledge item is marked as department-visible, project-visible, sensitive, or strictly controlled, **When** a user outside the authorized scope searches or asks a question, **Then** the item and its content are excluded from results and answers.
-2. **Given** knowledge contains customer materials, contract terms, source code, pricing, or sensitive personnel information, **When** it enters intake or retrieval flows, **Then** the system applies required review, desensitization, or access restrictions before reuse.
-3. **Given** a user accesses, cites, downloads, exports, or invokes knowledge through an upper-level application, **When** the action completes or fails, **Then** the system records actor, time, knowledge source, operation type, usage context, and outcome.
-4. **Given** an administrator audits usage, **When** they review a knowledge item, user, project, or time period, **Then** they can see source, approval, access, citation, model-call, and lifecycle records relevant to that scope.
+1. **Given** 知识被标记为部门可见、项目可见、敏感或严格受控，**When** 未授权用户检索或问答，**Then** 系统排除该知识及其内容片段。
+2. **Given** 知识包含客户资料、合同条款、源代码、报价信息或敏感人员信息，**When** 资料进入入库、检索或问答流程，**Then** 系统按密级触发脱敏、审批、限制访问或禁止复用。
+3. **Given** 用户浏览、引用、下载、导出或通过上层应用调用知识，**When** 操作成功或失败，**Then** 系统记录操作者、时间、知识来源、操作类型、业务上下文和结果。
+4. **Given** 管理员需要审计知识使用情况，**When** 管理员按用户、知识条目、项目、部门、时间段或操作类型查询，**Then** 系统展示来源、审核、访问、引用、模型调用和生命周期记录。
 
 ---
 
-### User Story 4 - Operate Knowledge Quality and Lifecycle (Priority: P2)
+### User Story 4 - 知识质量与生命周期运营 (Priority: P2)
 
-As a knowledge administrator or domain expert, I need quality scoring, user feedback, expiration review, rectification, removal, and operational reporting so that the knowledge base stays accurate, current, and useful over time.
+作为知识管理员或领域专家，我希望对知识进行质量评分、用户反馈、热度统计、过期复核、整改、下架、恢复和运营看板分析，确保知识库持续保持准确、有效和可复用。
 
-**Why this priority**: A knowledge base without quality operations will accumulate obsolete and low-trust material.
+**Why this priority**: 仅有入库和检索不足以形成长期知识资产，缺少质量运营会导致过期、低质量或未经确认的信息被继续复用。
 
-**Independent Test**: Administrators can identify low-quality, low-confidence, expired, or frequently reused items and trigger review, correction, removal, or promotion actions.
+**Independent Test**: 管理员能够识别低质量、低使用、即将过期或高价值知识，并触发复核、整改、下架或推广动作。
 
 **Acceptance Scenarios**:
 
-1. **Given** a knowledge item is published, **When** users browse, favorite, cite, ask questions from, or rate it, **Then** the system records usage and feedback signals.
-2. **Given** a knowledge item reaches its validity date or receives negative feedback, **When** lifecycle checks run, **Then** the responsible person or administrator receives a review task.
-3. **Given** a knowledge item is obsolete or incorrect, **When** it is rectified, removed, or restored, **Then** all status changes and reasons are traceable.
-4. **Given** management reviews operations, **When** they open reporting views, **Then** they can see additions, usage, hot topics, quality scores, expired items, and weak knowledge areas.
+1. **Given** 知识已发布，**When** 用户浏览、收藏、引用、问答命中、评价或反馈，**Then** 系统记录相应质量和使用信号。
+2. **Given** 知识达到有效期、收到负面反馈或质量评分低于运营阈值，**When** 生命周期检查触发，**Then** 系统向责任人或管理员发起复核任务。
+3. **Given** 知识被确认过期、错误或不再适用，**When** 管理员执行整改、下架或恢复，**Then** 系统记录状态变化、原因、责任人和时间。
+4. **Given** 管理层查看知识运营情况，**When** 打开运营视图，**Then** 系统展示新增知识、热门知识、引用量、过期知识、质量分布、薄弱领域和专家贡献。
 
 ---
 
-### User Story 5 - Provide Governed Knowledge Services to AI Applications (Priority: P2)
+### User Story 5 - 面向上层 AI 应用的受控知识服务 (Priority: P2)
 
-As an AI application owner, I need a governed knowledge service that can provide authorized knowledge, citations, and audit records to applications such as proposal generation, code assistance, interview assistance, and multi-agent systems so that each application does not rebuild its own untrusted knowledge source.
+作为 AI 应用负责人，我希望知识库向方案生成、代码辅助、面试辅助、多 Agent 平台等上层应用提供统一、可权限过滤、可引用溯源、可审计的知识服务，避免每个 AI 应用重复建设不可信知识源。
 
-**Why this priority**: The knowledge system is intended to become a trusted foundation for later AI scenarios, while those applications remain outside the core scope of the first-phase knowledge base.
+**Why this priority**: 该体系不仅是文档库，也是后续企业 AI 应用的可信知识底座，但上层应用本身不应混入一期知识库本体范围。
 
-**Independent Test**: An upper-level application can request knowledge on behalf of a user, receive only permitted results with citations, and leave a usage record without bypassing governance controls.
+**Independent Test**: 上层应用能够代表某个用户请求知识服务，系统仅返回该用户有权使用的知识与引用来源，并记录调用过程。
 
 **Acceptance Scenarios**:
 
-1. **Given** an upper-level application requests knowledge for a user, **When** the request is processed, **Then** the response is filtered by that user's permissions and includes source references.
-2. **Given** an application uses knowledge in generated output, **When** the output is returned, **Then** the user can inspect the cited knowledge source, version, and applicable scope.
-3. **Given** an application attempts to access high-sensitivity knowledge, **When** the request lacks required authorization or approval, **Then** the request is denied and the denial is logged.
-4. **Given** the organization adds a new AI application later, **When** it integrates with the knowledge service, **Then** it reuses the same permission, citation, and audit controls.
+1. **Given** 上层应用代表用户请求知识，**When** 请求被处理，**Then** 系统按该用户权限过滤知识并返回引用来源。
+2. **Given** 上层应用将知识用于生成输出，**When** 输出返回用户，**Then** 用户能够查看知识来源、版本和适用范围。
+3. **Given** 上层应用请求敏感或严格受控知识，**When** 用户或应用缺少必要授权或审批，**Then** 系统拒绝请求并记录拒绝原因。
+4. **Given** 组织后续新增 AI 应用，**When** 新应用接入知识服务，**Then** 新应用复用同一套权限、引用和审计控制。
 
 ### Edge Cases
 
-- A submitted file lacks required metadata or has ambiguous ownership.
-- Duplicate or near-duplicate knowledge already exists in the repository.
-- A knowledge item contains multiple confidentiality levels within the same source.
-- A user has department access but not project access for a specific item.
-- A cited knowledge item becomes expired or removed after being used in an answer.
-- Reviewers disagree on confidentiality, quality, or applicable scope.
-- An upper-level application requests knowledge without a user identity or business context.
-- Network, model, or search services are temporarily unavailable.
-- A source system changes or deletes the original file after a knowledge copy has been indexed.
-- A departing employee owns knowledge items that still require lifecycle responsibility.
+- 提交资料缺少必填元数据、来源不清或责任人不明确。
+- 提交资料与已有知识重复或高度相似。
+- 单个资料同时包含多个密级或多个适用范围。
+- 用户拥有部门权限但不拥有特定项目权限。
+- 已被答案引用的知识后来过期、下架或被新版本替代。
+- 严格受控知识被检索命中但当前用户尚未获得显式审批。
+- 知识管理员、领域专家和安全管理员对密级、质量或适用范围判断不一致。
+- 上层应用请求知识时没有传入用户身份、项目上下文或业务用途。
+- 检索、问答、模型、消息提醒或审计服务临时不可用。
+- 原始来源系统中的文件被移动、删除或更新。
+- 只读接入的共享目录或项目样例无法访问、文件变更或来源链接失效。
+- 归档或下架知识仍处于审计或历史版本留存期内。
+- 知识责任人离职或调整岗位后仍有知识待复核。
 
-## Requirements
+## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST provide a unified knowledge submission entry for documents, notes, meeting outputs, project materials, code practices, review materials, links, and structured forms.
-- **FR-002**: The system MUST require submitters to provide source, submitter, responsible person, role direction, business theme, customer or project context, confidentiality level, summary, suggested tags, applicable scope, and validity period before review.
-- **FR-003**: The system MUST support intake flows for project review, sales archive, delivery review, recruitment evaluation, and other business actions that produce reusable knowledge.
-- **FR-004**: The system MUST create an intake request for every submitted knowledge item and track request status from submission through approval, rejection, publication, rectification, removal, or restoration.
-- **FR-005**: The system MUST route submitted knowledge to knowledge administrators, domain experts, or security reviewers based on knowledge type, confidentiality level, and business scope.
-- **FR-006**: The system MUST record reviewer decisions, comments, reasons, timestamps, and responsible parties for all approval, rejection, rectification, removal, and restoration actions.
-- **FR-007**: The system MUST maintain a version history for each knowledge item, including version identifier, change description, effective status, publication time, applicable scope, and historical traceability.
-- **FR-008**: The system MUST show the latest effective version by default while allowing authorized users to trace historical versions.
-- **FR-009**: The system MUST classify knowledge by role direction, business theme, industry or customer type, project stage, technology topic, confidentiality level, and lifecycle status.
-- **FR-010**: The system MUST support tag-based, metadata-based, keyword-based, and semantic retrieval within the user's authorized knowledge scope.
-- **FR-011**: The system MUST provide question-answering over authorized knowledge and include cited knowledge sources, version identifiers, applicable scope, and confidence or review cues.
-- **FR-012**: The system MUST recommend related cases, templates, historical experience, and reusable materials based on current user context, project context, customer context, or document content.
-- **FR-013**: The system MUST preserve source file references, submitter, responsible person, publication time, applicable scope, citation relationships, and lifecycle status for every knowledge item.
-- **FR-014**: The system MUST prevent expired, removed, rejected, or superseded knowledge from being presented as current formal reuse material.
-- **FR-015**: The system MUST support confidentiality levels including internal public, department-visible, project-visible, sensitive, and strictly controlled.
-- **FR-016**: The system MUST enforce role, department, project, confidentiality, and explicit authorization rules before knowledge is displayed, cited, exported, downloaded, or supplied to upper-level applications.
-- **FR-017**: The system MUST apply review, desensitization, and restricted-use controls to customer materials, contract information, source code, pricing information, and sensitive personnel information.
-- **FR-018**: The system MUST keep high-sensitivity data out of model training datasets by default and allow use only for authorized retrieval-augmented answers or approved review workflows.
-- **FR-019**: The system MUST record audit events for submission, review, publication, version change, search, browse, citation, export, download, application invocation, denied access, and lifecycle changes.
-- **FR-020**: The system MUST allow administrators to audit by user, knowledge item, project, department, time period, action type, and upper-level application.
-- **FR-021**: The system MUST collect knowledge usage signals including browsing, favorites, citations, question-answer hits, reuse events, user ratings, and user feedback.
-- **FR-022**: The system MUST support quality scoring, expert review, user feedback, expiration reminders, rectification tasks, removal, and restoration for knowledge lifecycle management.
-- **FR-023**: The system MUST provide operational reporting for knowledge additions, reuse, hot topics, expired items, quality distribution, weak areas, and expert contribution.
-- **FR-024**: The system MUST provide governed knowledge services to upper-level AI applications with permission filtering, citation return, usage logging, and denial handling.
-- **FR-025**: The system MUST treat proposal generation, code assistance, interview assistance, and multi-agent applications as external consumers of the knowledge service rather than core first-phase knowledge-base functions.
-- **FR-026**: The system MUST support lightweight first-phase integration with identity, document directories, shared folders, project material samples, and message notifications without replacing existing formal business systems.
-- **FR-027**: The system MUST define clear boundaries with existing OA, project management, code repository, file storage, document, and HR systems: source systems retain authoritative business data and formal process control; the knowledge system stores authorized knowledge copies, summaries, tags, indexes, and references.
-- **FR-028**: The system MUST support backup, recovery, monitoring, alerting, and degradation procedures for knowledge access, review, and service continuity.
+- **FR-001**: 系统 MUST 提供统一知识提交入口，支持文档、笔记、会议纪要、项目资料、代码实践、复盘材料、链接和结构化表单入库。
+- **FR-002**: 系统 MUST 在入库前要求提交人填写来源、提交人、责任人、岗位方向、业务主题、客户或项目、密级、摘要、建议标签、适用范围和有效期。
+- **FR-003**: 系统 MUST 支持将项目复盘、售前归档、交付复盘、招聘评估等业务动作绑定为知识入库触发场景。
+- **FR-004**: 系统 MUST 为每条提交知识生成入库申请，并跟踪提交、审核、驳回、发布、整改、下架和恢复等状态。
+- **FR-005**: 系统 MUST 根据知识类型、密级、业务范围和适用场景，将入库申请路由给知识管理员、领域专家或安全管理员审核。
+- **FR-006**: 系统 MUST 记录所有审核、驳回、整改、下架和恢复动作的处理人、结论、意见、原因和时间。
+- **FR-007**: 系统 MUST 为知识条目维护版本历史，包括版本号、变更说明、生效状态、发布时间、适用范围和历史追溯信息。
+- **FR-008**: 系统 MUST 默认展示最新生效版本，并允许授权用户追溯历史版本。
+- **FR-009**: 系统 MUST 按岗位方向、业务主题、行业客户、项目阶段、技术栈、安全密级和生命周期状态组织知识。
+- **FR-010**: 系统 MUST 在用户授权范围内支持标签检索、元数据检索、关键词检索和语义检索。
+- **FR-011**: 系统 MUST 在用户授权范围内提供知识问答，并展示引用来源、版本号、适用范围和复核提示。
+- **FR-012**: 系统 MUST 根据当前项目、客户、需求、文档或用户上下文推荐相似案例、模板、历史经验和可复用资料。
+- **FR-013**: 系统 MUST 为每条知识保留来源文件或来源链接、提交人、责任人、发布时间、适用范围、引用关系和生命周期状态。
+- **FR-014**: 系统 MUST 防止过期、下架、驳回或已被替代的知识作为当前正式复用材料被展示。
+- **FR-015**: 系统 MUST 支持至少以下密级：公开内部、部门可见、项目可见、敏感、严格受控。
+- **FR-016**: 系统 MUST 接入统一身份获取用户、部门和角色信息，并在知识库本地管理知识条目的项目授权、密级授权和例外授权规则。
+- **FR-029**: 系统 MUST 在展示、引用、导出、下载或向上层应用提供知识前，同时校验统一身份信息和知识库本地授权规则。
+- **FR-017**: 系统 MUST 对客户资料、合同信息、源代码、报价信息和敏感人员信息执行复核、脱敏、限制访问或禁止复用控制。
+- **FR-018**: 系统 MUST 默认禁止高敏知识进入模型训练集，仅允许在授权范围内用于检索增强问答或已批准的复核流程。
+- **FR-030**: 系统 MUST 允许敏感知识在授权后以脱敏片段用于问答，并默认仅向未审批用户展示严格受控知识的元数据和授权申请入口。
+- **FR-031**: 系统 MUST 要求严格受控知识在显式审批后才可向问答或上层 AI 应用提供脱敏片段。
+- **FR-019**: 系统 MUST 记录提交、审核、发布、版本变更、检索、浏览、引用、导出、下载、上层应用调用、访问拒绝和生命周期变更等审计事件。
+- **FR-020**: 系统 MUST 支持管理员按用户、知识条目、项目、部门、时间段、操作类型和上层应用进行审计查询。
+- **FR-021**: 系统 MUST 采集知识浏览、收藏、引用、问答命中、复用、评分和反馈等使用信号。
+- **FR-022**: 系统 MUST 支持质量评分、专家复核、用户反馈、过期提醒、整改任务、下架和恢复等生命周期运营能力。
+- **FR-023**: 系统 MUST 提供知识新增、复用、热门、过期、质量分布、薄弱领域和专家贡献等运营统计。
+- **FR-024**: 系统 MUST 向上层 AI 应用提供受控知识服务，并在响应中执行权限过滤、返回引用来源、记录调用日志和处理拒绝场景。
+- **FR-025**: 系统 MUST 将方案生成、代码辅助、面试辅助和多 Agent 平台定位为知识服务消费方，而不是一期知识库本体功能。
+- **FR-026**: 系统 MUST 支持一期通过人工上传、链接引用、共享目录只读接入、项目资料样例只读接入和消息提醒形成轻量接入，且不替代原系统正式流程。
+- **FR-027**: 系统 MUST 明确与 OA、项目管理、代码仓库、网盘、文档系统和 HR 系统的边界：原系统保留业务主数据和正式流程，知识库沉淀授权知识副本、摘要、标签、索引和引用关系。
+- **FR-028**: 系统 MUST 支持备份恢复、运行监控、异常告警和降级处理，保障知识访问、审核和服务调用的连续性。
+- **FR-032**: 系统 MUST 要求来自人工上传、链接引用、共享目录只读接入或项目资料样例只读接入的知识均经过人工审核确认后才能发布入库。
+- **FR-033**: 系统 MUST 将审计记录、审批记录、访问记录和调用记录至少保留 3 年，并在知识归档或下架后将其历史版本至少保留 3 年。
+- **FR-034**: 系统 MUST 在一期选择 1 个上层 AI 应用试点调用场景，用于验证受控知识服务的权限过滤、引用溯源和调用审计能力。
 
-### Key Entities
+### Key Entities *(include if feature involves data)*
 
-- **Knowledge Item**: A managed knowledge asset derived from a document, note, recording transcript, code practice, project material, review, link, or structured submission. It includes content, metadata, classification, status, source, owner, citations, and lifecycle information.
-- **Knowledge Source**: The original location or origin of a knowledge item, such as a file, directory, project artifact, business system record, manual form, or link reference.
-- **Knowledge Card**: A user-facing summary of a knowledge item, including title, abstract, tags, source, responsible person, version, status, scope, and usage signals.
-- **Intake Request**: A workflow object representing submission, review, approval, rejection, publication, rectification, or removal of a knowledge item.
-- **Review Decision**: A recorded reviewer outcome with reviewer identity, comments, reason, timestamp, and resulting status.
-- **Version Record**: A historical snapshot of a knowledge item with version identifier, change description, publication state, applicable scope, and traceability.
-- **Classification Tag**: A label or controlled classification value covering role direction, business theme, industry, customer type, project stage, technology topic, confidentiality, and lifecycle.
-- **Permission Rule**: A governance rule determining whether a user or application may search, view, cite, export, download, or use a knowledge item.
-- **Audit Event**: A trace record for sensitive operations across intake, review, access, citation, export, model usage, denial, and lifecycle changes.
-- **Knowledge Service Request**: A request from an upper-level application to retrieve, answer, recommend, or cite governed knowledge on behalf of a user or business context.
-- **Quality Signal**: Usage, feedback, rating, review, expiration, or correction data used to assess and improve knowledge quality.
+- **知识条目**: 从文档、笔记、会议输出、代码实践、项目资料、复盘记录、链接或表单提交中沉淀出的受管知识资产，包含内容、元数据、分类、状态、来源、责任人、引用关系和生命周期信息。
+- **知识来源**: 知识条目的原始出处，如文件、目录、项目材料、业务系统记录、表单、链接或人工提交说明。
+- **知识卡片**: 面向使用者展示的知识摘要，包含标题、摘要、标签、来源、责任人、版本、状态、范围、密级和使用信号。
+- **入库申请**: 表示知识提交、审核、驳回、发布、整改、下架或恢复过程的流程对象。
+- **审核记录**: 审核人对知识内容准确性、保密性、可复用性和适用范围作出的结论、意见、原因和时间记录。
+- **版本记录**: 知识条目的历史快照，包含版本号、变更说明、生效状态、适用范围、发布时间和追溯关系。
+- **分类标签**: 用于描述岗位方向、业务主题、行业客户、项目阶段、技术栈、密级和生命周期的分类值。
+- **权限规则**: 决定用户或应用是否可检索、查看、引用、导出、下载或调用知识的治理规则。
+- **审计事件**: 对提交、审核、访问、引用、导出、调用、拒绝和生命周期变更等操作形成的留痕记录。
+- **知识服务请求**: 上层应用代表用户或业务上下文发起的检索、问答、推荐或引用请求。
+- **质量信号**: 浏览、收藏、引用、问答命中、评分、反馈、过期、整改和复核等用于评估知识质量和运营价值的数据。
 
 ## Scope
 
 ### In Scope
 
-- Unified knowledge submission and intake workflow.
-- Required metadata, classification, source tracking, and knowledge cards.
-- Review, publication, rejection, rectification, removal, and restoration flows.
-- Version control, citation traceability, lifecycle state, and expiration review.
-- Multi-dimensional classification and search.
-- Permission-filtered question answering with source citations.
-- Similar case, template, and reusable material recommendations.
-- Confidentiality classification, authorization, desensitization, and audit.
-- Operational reporting for quality, usage, expiration, and contribution.
-- Governed knowledge service for upper-level AI applications.
-- Lightweight first-phase integration with identity, document locations, project material samples, and notifications.
+- 统一知识提交入口和入库申请流程。
+- 必填元数据、分类标签、来源追踪和知识卡片。
+- 知识审核、发布、驳回、整改、下架和恢复。
+- 版本控制、引用溯源、生命周期状态和过期复核。
+- 多维分类、检索、语义问答和相似推荐。
+- 权限过滤、密级控制、脱敏和访问审计。
+- 知识质量评分、用户反馈、运营统计和专家复核。
+- 面向上层 AI 应用的受控知识服务和 1 个试点调用场景验证。
+- 一期轻量接入身份、人工上传、链接引用、共享目录只读接入、项目资料样例只读接入和消息提醒。
 
 ### Out of Scope for First Phase
 
-- Replacing OA, project management, code repositories, file storage, document systems, or HR systems.
-- Becoming the authoritative system for contracts, source code, production data, personnel data, or business master data.
-- Full implementation of proposal generation, code generation, interview scoring, or multi-agent business applications.
-- Automatic ingestion of all historical enterprise data without human review.
-- Training models on high-sensitivity enterprise knowledge by default.
+- 替代 OA、项目管理、代码仓库、网盘、文档系统或 HR 系统。
+- 作为合同、源代码、生产数据、人员数据或业务主数据的权威系统。
+- 完整实现方案生成、代码生成、面试评分或多 Agent 业务应用。
+- 未经人工审核自动接入全部历史企业资料。
+- 默认使用高敏企业知识进行模型训练。
 
-## Success Criteria
+## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: At least 90% of pilot knowledge submissions can be completed with required metadata and routed to the correct review path without manual rework outside the system.
-- **SC-002**: At least 95% of published pilot knowledge items include source, responsible person, version, applicable scope, confidentiality level, and lifecycle status.
-- **SC-003**: Pilot users can find relevant reusable knowledge for common sales, consulting, delivery, development, and HR scenarios within 3 minutes in at least 80% of sampled tasks.
-- **SC-004**: At least 90% of question-answer responses based on enterprise knowledge include verifiable citations to authorized source items.
-- **SC-005**: Unauthorized users are prevented from viewing or receiving restricted knowledge in 100% of sampled permission tests.
-- **SC-006**: All sampled access, citation, export, application invocation, denial, and lifecycle operations produce audit records with actor, time, operation, target, and outcome.
-- **SC-007**: At least 80% of pilot users report that knowledge reuse is easier than searching across personal files, chat records, project folders, and shared drives.
-- **SC-008**: At least 70% of selected pilot knowledge items receive quality signals such as review score, reuse event, user feedback, or expiration status within the pilot period.
-- **SC-009**: First-phase pilot operations demonstrate a complete loop covering submission, review, publication, retrieval, citation, permission filtering, audit, and lifecycle handling.
-- **SC-010**: Upper-level application trials receive only permission-filtered knowledge with citations and auditable usage records in 100% of sampled calls.
+- **SC-001**: 试点范围内至少 90% 的知识提交能够在系统内完成必填元数据补齐，并自动进入正确审核路径。
+- **SC-002**: 试点范围内至少 95% 的已发布知识包含来源、责任人、版本、适用范围、密级和生命周期状态。
+- **SC-003**: 在销售、咨询、交付、开发和 HR 的典型试点任务中，用户在 3 分钟内找到可复用知识的成功率达到 80% 以上。
+- **SC-004**: 基于企业知识生成的问答结果中，至少 90% 展示可核验的授权引用来源。
+- **SC-005**: 在抽样权限测试中，未授权用户访问、检索、问答或调用受限知识的拦截率达到 100%。
+- **SC-006**: 抽样的访问、引用、导出、上层应用调用、访问拒绝和生命周期变更操作均生成包含操作者、时间、操作、对象和结果的审计记录。
+- **SC-007**: 试点用户中至少 80% 认为知识复用比在个人文件、聊天记录、项目目录和共享盘中查找更容易。
+- **SC-008**: 试点周期内，至少 70% 的重点知识条目获得质量信号，如评分、引用、复用、反馈或过期状态。
+- **SC-009**: 一期试点能够完整演示提交、审核、发布、检索、问答、引用、权限过滤、审计和生命周期处理闭环。
+- **SC-010**: 上层应用试调用中，100% 的抽样请求均只返回权限过滤后的知识、引用来源和可审计调用记录。
+- **SC-011**: 抽样检查中，审计、审批、访问、调用记录和归档或下架知识历史版本均符合至少 3 年留存要求。
+- **SC-012**: 一期至少完成 1 个上层 AI 应用试点调用场景，并验证权限过滤、引用溯源和调用审计均可正常闭环。
 
 ## Assumptions
 
-- The first phase focuses on a pilot knowledge scope rather than all enterprise documents.
-- Existing systems remain authoritative for business master data and formal approval records.
-- The organization will designate knowledge administrators, domain experts, and security reviewers for pilot operation.
-- The organization will provide representative sample materials for sales, consulting, business, development, delivery, and HR scenarios.
-- The system is expected to operate in a private or controlled network environment suitable for sensitive enterprise knowledge.
-- High-sensitivity knowledge requires review, desensitization, and authorization before reuse.
-- AI applications consume governed knowledge through the knowledge service and do not bypass permission, citation, or audit controls.
+- 一期以试点知识范围为主，不一次性治理全部历史资料。
+- 用户、部门和角色以统一身份为准；知识条目的项目授权、密级授权和例外授权由知识库本地维护。
+- 既有业务系统继续作为业务主数据和正式流程的权威来源。
+- 客户侧能够指定知识管理员、领域专家和安全管理员参与试点运营。
+- 客户侧能够提供销售、咨询、业务、开发、交付和 HR 等典型样例资料。
+- 系统部署环境以私有化、内网或受控网络为前提。
+- 一期不自动同步外部系统中的全部资料；共享目录和项目资料样例只作为只读来源，入库发布仍以人工审核为准。
+- 审计记录、审批记录、访问记录、调用记录和归档或下架知识历史版本至少保留 3 年。
+- 高敏知识必须经过复核、脱敏和授权后才能被检索、问答或调用。
+- 敏感知识可在授权后脱敏用于问答；严格受控知识默认不进入问答内容，除非获得显式审批。
+- 上层 AI 应用必须通过受控知识服务消费知识，不得绕过权限、引用和审计控制。
+- 一期只选择 1 个上层 AI 应用试点调用场景验证知识服务闭环，不同时交付全部 AI 应用。

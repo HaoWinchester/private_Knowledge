@@ -1,0 +1,12 @@
+[
+  {
+    "knowledgeItemId": "K-2026-0142",
+    "scenario": "expires_in_30_days",
+    "expectedAction": "request_owner_review"
+  },
+  {
+    "knowledgeItemId": "K-2026-0138",
+    "scenario": "low_quality_signal",
+    "expectedAction": "assign_rectification"
+  }
+]

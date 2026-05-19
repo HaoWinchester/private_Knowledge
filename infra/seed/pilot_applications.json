@@ -1,0 +1,10 @@
+[
+  {
+    "applicationId": "pilot-agent",
+    "name": "Agent 平台试点",
+    "status": "connected",
+    "monthlyCalls": 1284,
+    "deniedCalls": 37,
+    "pilot": true
+  }
+]

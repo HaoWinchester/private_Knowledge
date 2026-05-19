@@ -1,0 +1,16 @@
+[
+  {
+    "userId": "user-knowledge-admin",
+    "displayName": "Li Xiaonan",
+    "departmentId": "dept-presales",
+    "departmentName": "Presales Consulting",
+    "roles": ["knowledge_admin", "domain_expert"]
+  },
+  {
+    "userId": "user-delivery",
+    "displayName": "Gao Yang",
+    "departmentId": "dept-delivery",
+    "departmentName": "Delivery",
+    "roles": ["employee"]
+  }
+]
